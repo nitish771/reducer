@@ -3,3 +3,6 @@ pytybe
 udemy-dl
 colorama
 clint
+unrar
+unzip
+tar

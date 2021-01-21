@@ -21,9 +21,9 @@ class Compress:
     def __str__(self):
     	return '''
 Parms  :-
-remote :- Remote Gdrive url
-local  :- Your gdrive url
-    	'''
+remote :- From Where | Gdrive url
+local  :- To Where | gdrive url
+'''
 
     def add_not_down(self, xt):
         self.not_down.append(xt)
@@ -37,7 +37,7 @@ local  :- Your gdrive url
         os.chdir(folder)
 
         if quitIfMainFolderExists and os.path.exists(folder.replace(self.root, self.local)):
-            print('exists', folder, (folder.replace(self.root, self.local)))
+            print('exists', folder.replace(self.root, self.local))
             return
 
         # print(folder)
@@ -62,7 +62,7 @@ local  :- Your gdrive url
         file_ext = file.split('.')[-1]
         if self.should(file):
             if file_ext in self.video:
-                ffmpeg_cmd = "echo ffmpeg -i " + self.valid_unix_name(file) + "\
+                ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
                       -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                       -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                       -y -r 20 " + saveas
