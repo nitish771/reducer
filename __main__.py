@@ -1,7 +1,4 @@
 import os
-import shutil
-
-print('compress imported')
 
 
 class Compress:
@@ -12,8 +9,6 @@ class Compress:
         self.root = self.remote
         self.local = os.path.join(local, self.top_dir)
         self.make_dirs(self.remote)
-        # self.local = local
-        # self.deepest_fold = 0
 
     def valid_unix_name(self, name):
         return '"'+name+'"'
@@ -38,3 +33,15 @@ class Compress:
         file_name = file_name.replace(self.root, self.local)
         print(file_name)
         return file_name.replace(self.root, self.local) not in self.remote.replace(self.root, self.local)
+
+    def compress(self, file, res="720"):
+        saveas = file.replace(self.root, self.local)
+        print(saveas, 'saveas')
+        ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
+              -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(res) + ")/2)*2'\" \
+              -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
+              -y -r 20 " + self.valid_unix_name(saveas)
+        print(ffmpeg_cmd)
+
+
+
