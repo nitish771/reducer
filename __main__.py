@@ -17,11 +17,14 @@ class Compress:
         self.make_dirs(self.remote)
         self.main()
 
+
     def add_not_down(self, xt):
         self.not_down.append(xt)
 
+
     def valid_unix_name(self, name):
         return '"'+name+'"'
+
 
     def make_dirs(self, folder, quitIfMainFolderExists=1):
         os.chdir(folder)
@@ -38,11 +41,13 @@ class Compress:
                 os.system('mkdir -p ' +
                           self.valid_unix_name(new_content.replace(self.root, self.local)))
 
+
     def should(self, file_name):
         # file_name = remote file name -> replace remote with local
         file_name = file_name.replace(self.root, self.local)
         print(file_name)
         return file_name.replace(self.root, self.local) not in self.remote.replace(self.root, self.local)
+
 
     def compress(self, file):
         saveas = self.valid_unix_name(file.replace(self.root, self.local))
@@ -53,11 +58,12 @@ class Compress:
                   -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                   -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                   -y -r 20 " + saveas
-            print('compressing\n', file.split('/')[-1])
+            print('compressing\t', file.split('/')[-1])
             os.system(ffmpeg_cmd + '  >  /dev/null')
-
         elif file_ext not in self.not_down:
             os.system('cp ' + self.valid_unix_name(file) + ' ' + saveas)
+        print('Done ', file.split('/')[-1])
+
 
     def get_file(self, folder):
         os.chdir(folder)
@@ -69,11 +75,11 @@ class Compress:
             else:
                 self.get_file(new_file)
 
+
     def main(self):
         pool = Pool()
 
         ## Get all files recursively
-
         self.get_file(self.remote)
         shuffle(self.files)
         pool.map(self.compress, self.files)
