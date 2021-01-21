@@ -1,3 +1,5 @@
 ffmpeg
 pytybe
 udemy-dl
+colorama
+clint
