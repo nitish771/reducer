@@ -33,3 +33,8 @@ class Compress:
                 os.system('mkdir -p ' +
                           self.valid_unix_name(new_content.replace(self.root, self.local)))
 
+    def should(self, file_name):
+        # file_name = remote file name -> replace remote with local
+        file_name = file_name.replace(self.root, self.local)
+        print(file_name)
+        return file_name.replace(self.root, self.local) not in self.remote.replace(self.root, self.local)
