@@ -5,8 +5,6 @@ __copyright__ = "Copyright 2021"
 
 
 from .__main__ import Compress
-from . import youtube
-from . import udemy
 
-__all__ = ["down", "extract", "Compress"]
+__all__ = ["Compress"]
 
