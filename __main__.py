@@ -76,8 +76,8 @@ local  :- To Where | gdrive url
                 print('Compressed\t', file.split('/')[-1])
             elif file_ext not in self.not_down:
 
-                os.system('cp ' + self.valid_unix_name(file) + ' ' + saveas)
                 print('Moving ', file.split('/')[-1])
+                os.system('cp ' + self.valid_unix_name(file) + ' ' + saveas)
         else:
             print('skipping. File ', file.split('/')[-1], ' exists')
 
