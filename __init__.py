@@ -6,5 +6,5 @@ __copyright__ = "Copyright 2021"
 
 from .__main__ import Compress
 
-__all__ = ["Compress"]
+__all__ = ["Compress", "down", "extract"]
 

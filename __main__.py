@@ -5,21 +5,26 @@ from random import shuffle
 
 class Compress:
 
-    def __init__(self, remote, local, res="720"):
+    def __init__(self, remote=None, local=None, res="720"):
         self.remote = remote
+        # self.remote = self.remote
+        self.local = local
+        if self.remote is None:
+            self.remote = input("Enter Remote URL : ")
+        if self.local is None:
+            self.local = input("Enter Local URL : ")
         self.top_dir = self.remote.split('/')[-1]
-        self.root = self.remote
         self.local = os.path.join(local, self.top_dir)
         self.files = []
         self.video = ['mkv', 'mov', 'mp4']
-        self.res = res
+        self.res = res # resolution
         self.not_down = ['srt', 'vtt']
         self.make_dirs(self.remote)
         self.main()
 
 
     def __str__(self):
-    	return '''
+        return '''
 Parms  :-
 remote :- From Where | Gdrive url
 local  :- To Where | gdrive url
@@ -33,31 +38,31 @@ local  :- To Where | gdrive url
         return '"'+name+'"'
 
 
-    def make_dirs(self, folder, quitIfMainFolderExists=1):
+    def make_dirs(self, folder, quitIfFolderExists=1):
+        # print('Makeing Directories Copy')
         os.chdir(folder)
 
-        if quitIfMainFolderExists and os.path.exists(folder.replace(self.root, self.local)):
-            print('exists', folder.replace(self.root, self.local))
+        if quitIfFolderExists and os.path.exists(folder.replace(self.remote, self.local)):
+            # print('exists ', folder.replace(self.remote, self.local))
             return
 
-        # print(folder)
         for dirs in os.listdir(folder):
             new_content = folder + '/' + dirs
             if os.path.isdir(new_content):
                 self.make_dirs(new_content)
                 os.system('mkdir -p ' +
-                          self.valid_unix_name(new_content.replace(self.root, self.local)))
+                          self.valid_unix_name(new_content.replace(self.remote, self.local)))
+            # breakpoint()
 
 
     def should(self, file_name):
-        # file_name = remote file name -> replace remote with local
-        file_name = file_name.replace(self.root, self.local)
-        print(file_name)
-        return not os.path.exists(file_name.replace(self.root, self.local)) # not in self.remote.replace(self.root, self.local)
+        file_name = file_name.replace(self.remote, self.local)
+        # print(file_name)
+        return not os.path.exists(file_name.replace(self.remote, self.local)) # not in self.remote.replace(self.remote, self.local)
 
 
     def compress(self, file):
-        saveas = self.valid_unix_name(file.replace(self.root, self.local))
+        saveas = self.valid_unix_name(file.replace(self.remote, self.local))
         # print(saveas, 'saveas')
         file_ext = file.split('.')[-1]
         if self.should(file):
@@ -68,11 +73,13 @@ local  :- To Where | gdrive url
                       -y -r 20 " + saveas
                 print('compressing\t', file.split('/')[-1])
                 os.system(ffmpeg_cmd + '  >  /dev/null')
+                print('Compressed\t', file.split('/')[-1])
             elif file_ext not in self.not_down:
+
                 os.system('cp ' + self.valid_unix_name(file) + ' ' + saveas)
-            print('Done ', file.split('/')[-1])
+                print('Moving ', file.split('/')[-1])
         else:
-        	print('exists', file)
+            print('skipping. File ', file.split('/')[-1], ' exists')
 
 
     def get_file(self, folder):
