@@ -1,6 +1,7 @@
 import os
 from multiprocessing import Pool
 from random import shuffle
+from .removeDups import remove
 
 
 class Compress:
@@ -21,6 +22,7 @@ class Compress:
         self.not_down = ['srt', 'vtt']
         self.make_dirs(self.remote)
         self.main()
+        remove(self.local)
 
 
     def __str__(self):
@@ -90,7 +92,7 @@ local  :- To Where | gdrive url
             if os.path.isfile(new_file):
                 self.files.append(new_file)
             else:
-                self.get_file(new_file)
+                self.get_file(new_file)	
 
 
     def main(self):
