@@ -20,14 +20,20 @@ def isDup(f1, f2):
 	f2_ext = f2.split('.')[-1]
 	
 	if f1_ext == f2_ext:
-		return f2 in [".".join(f1.split('.')[:-1])+'('+str(i)+').'+f1_ext for i in range(1, 6)]
+		return (f2 in [".".join(f1.split('.')[:-1])+'('+str(i)+').'+f1_ext for i in range(1, 6)] or
+			f2 in [".".join(f1.split('.')[:-1])+' ('+str(i)+').'+f1_ext for i in range(1, 6)]
+			)
 	return 0
 
 
 def remove(fold):
 	global files
 	getFiles(fold)
+	files.sort(key=lambda x:len(x))
 	for i in permutations(files, 2):
-		if isDup(*i):
+		out = isDup(*i)
+		if out:
 			print('removing ', i[1])
 			os.system('rm -rf "' + i[1] + '"')
+	files = []
+

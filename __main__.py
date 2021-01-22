@@ -22,7 +22,7 @@ class Compress:
         self.not_down = ['srt', 'vtt']
         self.make_dirs(self.remote)
         self.main()
-        remove(self.local)
+        # remove(self.local)
 
 
     def __str__(self):
@@ -102,4 +102,5 @@ local  :- To Where | gdrive url
         self.get_file(self.remote)
         shuffle(self.files)
         pool.map(self.compress, self.files)
+        print("Done")
 
