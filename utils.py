@@ -6,6 +6,8 @@ from xml.sax import saxutils
 import requests
 from bs4 import BeautifulSoup as bs
 from itertools import combinations
+import string
+
 
 def download(url, loc=None):
 	"""Download files using link
@@ -162,4 +164,57 @@ def delete_dups(folder):
 		print('deleting', dup_file, sep='\n')
 		os.system('rm ' + posix_name(dup_file))
 
-delete_dups('/home/nk/playground/reducer')
+
+def encrypt_name(name, val=1):
+	top_name = os.path.basename(name)
+	new_name = ''
+	print('name', name)
+	for char in top_name:
+		if (char not in string.digits) and (
+			char not in string.punctuation):
+			new_name += chr(ord(char)+val)
+		else:
+			new_name += char
+	os.system('mv ' + posix_name(name) +  ' ' + posix_name(os.path.dirname(name)+'/'+new_name))
+
+
+def encrypt(folder):
+	files = []
+	print(folder)
+	for content in os.listdir(folder):
+		if content.startswith('.'):
+			continue
+		file_= folder+'/'+content
+		if os.path.isdir(file_):
+			encrypt(file_)
+		else:
+			files.append(file_)
+	for file_ in files:
+		encrypt_name(file_)
+
+
+def decrypt_name(name, val=1):
+	orig_name = ''
+	top_name = os.path.basename(name)
+	for char in top_name:
+		if (char not in string.digits) and (
+			char not in string.punctuation):
+				orig_name += chr(ord(char)-val)
+		else:
+			orig_name += char
+	os.system('mv ' +  posix_name(name) + ' ' + posix_name(os.path.dirname(name)+'/'+orig_name))
+
+
+def decrypt(folder):
+	files = []
+	for content in os.listdir(folder):
+		if content.startswith('.'):
+			continue
+		file_= folder+'/'+content
+		if os.path.isdir(file_):
+			decrypt(file_)
+		else:
+			files.append(file_)
+	for file_ in files:
+		decrypt_name(file_)
+

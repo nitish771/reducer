@@ -7,4 +7,4 @@ __copyright__ = "Copyright 2021"
 from .__main__ import Compress
 from .removeDups import remove
 
-__all__ = ["Compress", "down", "extract", "remove", "utils"]
+__all__ = ["Compress", "down", "extract", "remove"]
