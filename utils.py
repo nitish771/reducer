@@ -1,10 +1,5 @@
 import os
-import sys
-import json
 import re
-from xml.sax import saxutils
-import requests
-from bs4 import BeautifulSoup as bs
 from itertools import combinations
 import string
 
@@ -178,7 +173,7 @@ def encrypt_name(name, val=1):
 	os.system('mv ' + posix_name(name) +  ' ' + posix_name(os.path.dirname(name)+'/'+new_name))
 
 
-def encrypt(folder):
+def encrypt(folder, val=1):
 	files = []
 	print(folder)
 	for content in os.listdir(folder):
@@ -205,7 +200,7 @@ def decrypt_name(name, val=1):
 	os.system('mv ' +  posix_name(name) + ' ' + posix_name(os.path.dirname(name)+'/'+orig_name))
 
 
-def decrypt(folder):
+def decrypt(folder, val=1):
 	files = []
 	for content in os.listdir(folder):
 		if content.startswith('.'):
@@ -217,4 +212,3 @@ def decrypt(folder):
 			files.append(file_)
 	for file_ in files:
 		decrypt_name(file_)
-
