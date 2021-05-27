@@ -1,8 +1,8 @@
 import os
 from multiprocessing import Pool
 from random import shuffle
-from .utils import encrypt
-from .removeDups import remove
+from utils import encrypt
+from removeDups import remove
 
 
 class Compress:
@@ -69,8 +69,8 @@ local  :- To Where | gdrive url
             # breakpoint()
 
     def should(self, file_name):
-        # check if file exists
-        return not os.path.exists(file_name)
+        s = os.path.exists(file_name[1:-1:])
+        return not s
 
     def compress(self, file):
         saveas = self.valid_unix_name(file.replace(self.remote, self.local))
@@ -87,7 +87,7 @@ local  :- To Where | gdrive url
             elif file_ext not in self.not_down:
 
                 print('Moving ', file.split('/')[-1])
-                os.system('cp ' + self.valid_unix_name(file) + ' ' + saveas)
+                os.system('cp -r ' + self.valid_unix_name(file) + ' ' + saveas)
         else:
             print('skipping. File ', file.split('/')[-1], ' exists')
 
