@@ -1,14 +1,14 @@
 import os
 from multiprocessing import Pool
 from random import shuffle
-from utils import encrypt
-from removeDups import remove
+from .utils import encrypt
+from .removeDups import remove
 
 
 class Compress:
 
     def __init__(self, remote=None, local=None, res="720",
-                delete=False, encrypt_=True):
+                delete=False, encrypt_=False):
         self.remote = remote
         self.local = local
         self.encrypt_ = encrypt_
@@ -95,11 +95,12 @@ local  :- To Where | gdrive url
         os.chdir(folder)
         # print(folder)
         for file in os.listdir(folder):
-            new_file = os.path.join(folder, file)
-            if os.path.isfile(new_file):
-                self.files.append(new_file)
-            else:
-                self.get_file(new_file)	
+            if not file.startswith('.'):
+                new_file = os.path.join(folder, file)
+                if os.path.isfile(new_file):
+                    self.files.append(new_file)
+                else:
+                    self.get_file(new_file)	
 
     def main(self):
         pool = Pool()
