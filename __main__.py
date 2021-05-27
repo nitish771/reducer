@@ -1,14 +1,14 @@
 import os
 from multiprocessing import Pool
 from random import shuffle
-from utils import encrypt
-from removeDups import remove
+from .utils import encrypt
+from .removeDups import remove
 
 
 class Compress:
 
     def __init__(self, remote=None, local=None, res="720",
-                delete=False, encrypt_=True):
+                delete=False, encrypt_=False):
         self.remote = remote
         self.local = local
         self.encrypt_ = encrypt_
@@ -18,11 +18,10 @@ class Compress:
         if self.local is None:
             self.local = input("Enter Local URL : ")
 
-
         self.top_dir = self.remote.split('/')[-1]        # name of the main folder
         self.local = os.path.join(self.local, self.top_dir)   # local abs path
         self.files = []                                  # files to compress
-        self.video = ['mkv', 'mov', 'mp4']
+        self.video = ['mkv', 'mov', 'mp4', 'ts']
         self.res = res # resolution
         self.not_down = ['vtt']
         self.make_dirs(self.remote)                     # make copies
@@ -51,10 +50,9 @@ local  :- To Where | gdrive url
     def valid_unix_name(self, name):
         return '"'+name+'"'
 
-    def make_dirs(self, folder, quitIfFolderExists=1):
+    def make_dirs(self, folder, quitIfFolderExists=0):
         # print('Makeing Directories Copy')
         os.chdir(folder)
-
         os.system('mkdir -p ' +
               self.valid_unix_name(folder.replace(self.remote, self.local)))
 
@@ -63,10 +61,11 @@ local  :- To Where | gdrive url
             return
 
         for dirs in os.listdir(folder):
-            new_content = folder + '/' + dirs
-            if os.path.isdir(new_content):
-                self.make_dirs(new_content)
-            # breakpoint()
+            if not dirs.split('/')[-1].startswith('.'):
+                new_content = folder + '/' + dirs
+                if os.path.isdir(new_content):
+                    self.make_dirs(new_content)
+                # breakpoint()
 
     def should(self, file_name):
         s = os.path.exists(file_name[1:-1:])
@@ -95,11 +94,13 @@ local  :- To Where | gdrive url
         os.chdir(folder)
         # print(folder)
         for file in os.listdir(folder):
-            new_file = os.path.join(folder, file)
-            if os.path.isfile(new_file):
-                self.files.append(new_file)
-            else:
-                self.get_file(new_file)	
+            if not file.split('/')[-1].startswith('.'):
+                print(file)
+                new_file = os.path.join(folder, file)
+                if os.path.isfile(new_file):
+                    self.files.append(new_file)
+                else:
+                    self.get_file(new_file)	
 
     def main(self):
         pool = Pool()
