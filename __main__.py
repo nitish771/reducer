@@ -94,8 +94,7 @@ local  :- To Where | gdrive url
         os.chdir(folder)
         # print(folder)
         for file in os.listdir(folder):
-            if not file.split('/')[-1].startswith('.'):
-                print(file)
+            if not file.startswith('.'):
                 new_file = os.path.join(folder, file)
                 if os.path.isfile(new_file):
                     self.files.append(new_file)
