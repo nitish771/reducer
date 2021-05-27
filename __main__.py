@@ -1,10 +1,8 @@
 import os
 from multiprocessing import Pool
 from random import shuffle
-from utils import encrypt
-from removeDups import remove
-# from .utils import encrypt
-# from .removeDups import remove
+from .utils import encrypt
+from .removeDups import remove
 
 
 class Compress:
@@ -27,7 +25,6 @@ class Compress:
         self.video = ['mkv', 'mov', 'mp4']
         self.res = res # resolution
         self.not_down = ['vtt']
-        print(self.local)
         self.make_dirs(self.remote)                     # make copies
         self.main()                                     # start compressing
         if delete:
@@ -73,7 +70,7 @@ local  :- To Where | gdrive url
 
     def should(self, file_name):
         # check if file exists
-        return not os.path.exists(file_name.replace(self.remote, self.local))
+        return not os.path.exists(file_name)
 
     def compress(self, file):
         saveas = self.valid_unix_name(file.replace(self.remote, self.local))
