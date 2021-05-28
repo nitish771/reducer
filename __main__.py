@@ -21,7 +21,7 @@ class Compress:
         self.top_dir = self.remote.split('/')[-1]        # name of the main folder
         self.local = os.path.join(self.local, self.top_dir)   # local abs path
         self.files = []                                  # files to compress
-        self.video = ['mkv', 'mov', 'mp4', 'ts']
+        self.video = ['mkv', 'mov', 'mp4']
         self.res = res # resolution
         self.not_down = ['vtt']
         self.make_dirs(self.remote)                     # make copies
