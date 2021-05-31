@@ -116,7 +116,13 @@ def extract(file, loc=None):
 
 
 def is_dup(file1, file2):
-	criteria1 = (os.path.getsize(file1) == os.path.getsize(file2)) # equal size
+	file1_sz = os.path.getsize(file1)
+	file2_sz = os.path.getsize(file2)
+
+	criteria1 = (file1_sz == file2_sz) # equal size
+	criteria2 = (file1 in file2)
+	criteria3 = (file2 in file1)
+
 	copy_file1 = file1
 	copy_file2 = file2
 	
@@ -124,10 +130,14 @@ def is_dup(file1, file2):
 	file2 = ".".join(file2.split('/')[-1].split('.')[:-1])
 
 
-	if (file1 in file2) and criteria1:
+	if  criteria2 and criteria1:
 		return copy_file2 # file2 is copy
-	elif criteria1 and file2 in file1: # len of file1 > file2
+	elif criteria1 and criteria3: # len of file1 > file2
 		return copy_file1 # file1 is copy
+	elif criteria2 and file2_sz > file1_sz:
+		return copy_file1  # file1 is incomplete copy
+	elif criteria3 and file2_sz < file1_sz:
+		return copy_file2  # file1 is incomplete copy
 
 
 def delete_dups(folder):
