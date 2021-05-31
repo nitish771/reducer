@@ -5,23 +5,12 @@ import string
 
 
 def download(url, loc=None):
-	"""Download files using link
-	Args:
-		url : str (link)
-		loc : str (path to save)
-	"""
-	if loc :
+	if loc:
 		os.chdir(loc)
 	os.system('wget -c ' + url)
 
 
 def copy_to(from_, to="/content/drive/MyDrive/Courses", delete=False):
-	"""copy folders]
-	Args:
-		from_  : str (source path )
-		to     : str (dest path)
-		delete : bool (if True it move files)
-	"""
 	if delete:
 		os.system('mv "{}" "{}" '.format(from_, to))
 	else:
@@ -71,14 +60,13 @@ def rename(file_name, *args):
 		new_name = ' '.join([name for name in new_name.split(' ') if name!=''])
 		new_name = os.path.join(cur_dir, new_name)
 		if file_name != new_name:
-			print('renaming', posix_name(file_name), posix_name(os.path.join(cur_dir, new_name)))
+			print('renaming', posix_name(file_name.split('/')[-1]), posix_name(os.path.join(cur_dir, new_name)))
 		# 	os.system('mv ' + posix_name(file_name)  + ' ' +  posix_name(new_name))
 	except Exception as e:
 		print('error in renaming', e)
 
 
 def rename_files(folder=None, *user_ids):
-	print(folder)
 	if not folder :# or folder == '..':
 		folder = os.getcwd()
 	for file_ in os.listdir(folder):
@@ -163,11 +151,11 @@ def delete_dups(folder):
 def encrypt_name(name, val=1):
 	top_name = os.path.basename(name)
 	new_name = ''
-	print('name', name)
+	print('name', top_name)
 	for char in top_name:
-		if (char not in string.digits) and (
-			char not in string.punctuation):
-			new_name += chr(ord(char)+val)
+		if (ord(char) > 64 and ord(char) < 91 or
+			ord(char) > 96 and ord(char) < 123) :
+				new_name += chr(ord(char)+val)
 		else:
 			new_name += char
 	os.system('mv ' + posix_name(name) +  ' ' + posix_name(os.path.dirname(name)+'/'+new_name))
@@ -175,7 +163,6 @@ def encrypt_name(name, val=1):
 
 def encrypt(folder, val=1):
 	files = []
-	print(folder)
 	for content in os.listdir(folder):
 		if content.startswith('.'):
 			continue
@@ -192,9 +179,9 @@ def decrypt_name(name, val=1):
 	orig_name = ''
 	top_name = os.path.basename(name)
 	for char in top_name:
-		if (char not in string.digits) and (
-			char not in string.punctuation):
-				orig_name += chr(ord(char)-val)
+		if (ord(char) > 65 and ord(char) < 92 or
+			ord(char) > 97 and ord(char) < 124):
+				orig_name += chr(ord(char)-val)	
 		else:
 			orig_name += char
 	os.system('mv ' +  posix_name(name) + ' ' + posix_name(os.path.dirname(name)+'/'+orig_name))

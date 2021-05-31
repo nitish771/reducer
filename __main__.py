@@ -8,7 +8,7 @@ from .removeDups import remove
 class Compress:
 
     def __init__(self, remote=None, local=None, res="720",
-                delete=False, encrypt_=False):
+                delete=False, encrypt_=False, quitIfFolderExists=0):
         self.remote = remote
         self.local = local
         self.encrypt_ = encrypt_
@@ -24,6 +24,7 @@ class Compress:
         self.video = ['mkv', 'mov', 'mp4']
         self.res = res # resolution
         self.not_down = ['vtt']
+        self.quitIfFolderExists = quitIfFolderExists
         self.make_dirs(self.remote)                     # make copies
         self.main()                                     # start compressing
         if delete:
@@ -32,12 +33,6 @@ class Compress:
             encrypt(self.local)
 
     def __str__(self):
-        ''' help : 
-        args:
-        delete : will delete duplicates after compression. (F)
-        encrypt : will encrypt files once compressed. (T)
-        '''
-
         return '''
 Parms  :-
 remote :- From Where | Gdrive url
@@ -50,13 +45,13 @@ local  :- To Where | gdrive url
     def valid_unix_name(self, name):
         return '"'+name+'"'
 
-    def make_dirs(self, folder, quitIfFolderExists=0):
+    def make_dirs(self, folder):
         # print('Makeing Directories Copy')
         os.chdir(folder)
         os.system('mkdir -p ' +
               self.valid_unix_name(folder.replace(self.remote, self.local)))
 
-        if quitIfFolderExists and os.path.exists(folder.replace(self.remote, self.local)):
+        if self.quitIfFolderExists and os.path.exists(folder.replace(self.remote, self.local)):
             # print('exists ', folder.replace(self.remote, self.local))
             return
 
