@@ -72,6 +72,7 @@ local  :- To Where | gdrive url
         file_name = file.replace(self.remote, '')
 
         if is_incomplete(saveas, file):
+            print('not compressed completely', saveas)
             os.unlink(saveas)
 
         if self.should(saveas):
