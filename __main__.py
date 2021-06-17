@@ -1,7 +1,7 @@
 import os
 from multiprocessing import Pool
 from random import shuffle
-from .utils import encrypt
+from .utils import encrypt, is_incomplete
 from .removeDups import remove
 
 
@@ -70,6 +70,9 @@ local  :- To Where | gdrive url
         saveas = self.valid_unix_name(file.replace(self.remote, self.local))
         file_ext = file.split('.')[-1]
         file_name = file.replace(self.remote, '')
+
+        if is_incomplete(saveas, file):
+            os.unlink(saveas)
 
         if self.should(saveas):
             if file_ext in self.video:
