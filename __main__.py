@@ -69,21 +69,23 @@ local  :- To Where | gdrive url
     def compress(self, file):
         saveas = self.valid_unix_name(file.replace(self.remote, self.local))
         file_ext = file.split('.')[-1]
+        file_name = file.replace(self.remote, '')
+
         if self.should(saveas):
             if file_ext in self.video:
                 ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
                       -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                       -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                       -y -r 20 " + saveas
-                print('compressing\t', file.split('/')[-1])
+                print('compressing\t', file_name)
                 os.system(ffmpeg_cmd + '  >  /dev/null')
-                print('Compressed\t', file.split('/')[-1])
-            elif file_ext not in self.not_down:
+                print('Compressed\t', file_name)
 
-                print('Moving ', file.split('/')[-1])
+            elif file_ext not in self.not_down:
+                print('Moving ', file_name)
                 os.system('cp -r ' + self.valid_unix_name(file) + ' ' + saveas)
         else:
-            print('skipping. File ', file.split('/')[-1], ' exists')
+            print('skipping. File ', file_name, ' exists')
 
     def get_file(self, folder):
         os.chdir(folder)

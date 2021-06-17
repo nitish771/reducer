@@ -1,7 +1,8 @@
 import os
 import re
-from itertools import combinations
+from itertools import combinations, product
 import string
+import multiprocessing as mp
 
 
 def download(url, loc=None):
@@ -10,17 +11,25 @@ def download(url, loc=None):
 	os.system('wget -c ' + url)
 
 
-def copy_to(from_, to="/content/drive/MyDrive/Courses", delete=False):
+def copy_to(src, dest, delete=False):
+	'''
+	copy content from one place to another
+	'''
+	import shutil
+
 	if delete:
-		os.system('mv "{}" "{}" '.format(from_, to))
+		os.system('cp -ru "{}" "{}" '.format(src, dest))	
+		shutil.rmtree(src)
 	else:
-		os.system('cp -r "{}" "{}" '.format(from_, to))
+		os.system('cp -ru "{}" "{}" '.format(src, dest))
 
 
 def posix_name(name):
 	"""return space seperated string into closed double quotes"""
 	return f'"{name}"'
 
+
+####### Remove Content source from names #########
 
 def get_sources(name):
 	"""Returns sources of files recursively"""
@@ -78,6 +87,7 @@ def rename_files(folder=None, *user_ids):
 				rename_files(new_content, *user_ids)
 			rename(folder, *user_ids) # when comes out from deepest folder change name
 
+#####################
 
 def compress(folder, format='zip', name=None, loc=None, delete=False):
 	if name is None:
@@ -115,22 +125,31 @@ def extract(file, loc=None):
 		os.system('rar e ' + posix_name(name) + '.rar')
 
 
+def is_incomplete(comp_file, orig_file):
+	orig_size = os.stat(orig_file).st_size
+	comp_size = os.stat(comp_file).st_size
+
+	return comp_size < (orig_size//0)
+
+
 def is_dup(file1, file2):
 	file1_sz = os.path.getsize(file1)
 	file2_sz = os.path.getsize(file2)
 
-	criteria1 = (file1_sz == file2_sz) # equal size
-	criteria2 = (file1 in file2)
-	criteria3 = (file2 in file1)
 
 	copy_file1 = file1
 	copy_file2 = file2
 	
+	# if last name / original name of files are same
 	file1 = ".".join(file1.split('/')[-1].split('.')[:-1])
 	file2 = ".".join(file2.split('/')[-1].split('.')[:-1])
 
+	criteria1 = (file1_sz == file2_sz) # equal size
+	criteria2 = (file1 in file2)
+	criteria3 = (file2 in file1)
+	# print(file1, file2, criteria1, criteria2, criteria3)
 
-	if  criteria2 and criteria1:
+	if  criteria1 and criteria2:
 		return copy_file2 # file2 is copy
 	elif criteria1 and criteria3: # len of file1 > file2
 		return copy_file1 # file1 is copy
@@ -140,34 +159,45 @@ def is_dup(file1, file2):
 		return copy_file2  # file1 is incomplete copy
 
 
-def delete_dups(folder):
+def delete_dups(folder, sema=0):
 	files = []
 	deletable = []
+	pool = mp.Pool()
+
+	if not sema:
+		print('deleting dumplicates files from ', folder)
+
+	print(folder)
 	for dir_ in os.listdir(folder):
 		new_content = os.path.join(folder, dir_)
 		if os.path.isdir(new_content):
-			delete_dups(new_content)
+			delete_dups(new_content, 1)
 		else:
 			files.append(new_content)
-	for perm in combinations(files, 2): # Call the function for one folder
-		dup_file = is_dup(*list(perm))
+
+	for comb in combinations(files, 2):  # Call the function for one folder
+		# print(comb)
+		dup_file = is_dup(*list(comb))
 		if dup_file:
 			deletable.append(dup_file)
+
+
 	for dup_file in deletable:
-		print('deleting', dup_file, sep='\n')
-		os.system('rm ' + posix_name(dup_file))
+		print("=> {:<50}".format(dup_file.replace(folder, '')))
+		os.unlink(dup_file)
 
 
 def encrypt_name(name, val=1):
 	top_name = os.path.basename(name)
 	new_name = ''
-	print('name', top_name)
 	for char in top_name:
-		if (ord(char) > 64 and ord(char) < 91 or
-			ord(char) > 96 and ord(char) < 123) :
-				new_name += chr(ord(char)+val)
+		# change only alphabets
+		if (ord(char)>64 and ord(char) < 91) or (
+			ord(char) > 96 and ord(char) < 123):
+				new_name += chr(ord(char) + val)
 		else:
 			new_name += char
+	# renmae file
 	os.system('mv ' + posix_name(name) +  ' ' + posix_name(os.path.dirname(name)+'/'+new_name))
 
 
@@ -189,12 +219,26 @@ def decrypt_name(name, val=1):
 	orig_name = ''
 	top_name = os.path.basename(name)
 	for char in top_name:
-		if (ord(char) > 65 and ord(char) < 92 or
+		if (ord(char)>65 and ord(char) < 92 ) or (
 			ord(char) > 97 and ord(char) < 124):
-				orig_name += chr(ord(char)-val)	
+				orig_name += chr(ord(char) - val)
 		else:
 			orig_name += char
-	os.system('mv ' +  posix_name(name) + ' ' + posix_name(os.path.dirname(name)+'/'+orig_name))
+	return orig_name
+
+
+def decrypt_list(folder, val=1):
+	files = []
+	for content in os.listdir(folder):
+		if content.startswith('.'):
+			continue
+		file_= folder+'/'+content
+		if os.path.isdir(file_):
+			decrypt_list(file_)
+		else:
+			files.append(file_)
+	for file_ in files:
+		print("{:<30} : {}".format(folder, decrypt_name(file_)))
 
 
 def decrypt(folder, val=1):
@@ -208,4 +252,6 @@ def decrypt(folder, val=1):
 		else:
 			files.append(file_)
 	for file_ in files:
-		decrypt_name(file_)
+		orig_name = decrypt_name(file_)
+		os.system('mv ' +  posix_name(file_) + ' ' + posix_name(os.path.dirname(file_) + '/' + orig_name))
+
