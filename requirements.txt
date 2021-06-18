@@ -1,4 +1,0 @@
-ffmpeg
-colorama
-clint
-bs4
