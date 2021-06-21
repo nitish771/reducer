@@ -190,13 +190,13 @@ def encrypt_name(name, val=1):
 	top_name = os.path.basename(name)
 	new_name = ''
 	for char in top_name:
-		# change only alphabets
+		# change only alphabets (65=A, 97=a)
 		if (ord(char)>64 and ord(char) < 91) or (
 			ord(char) > 96 and ord(char) < 123):
 				new_name += chr(ord(char) + val)
 		else:
 			new_name += char
-	# renmae file
+	# renmae files and folder
 	os.system('mv ' + posix_name(name) +  ' ' + posix_name(os.path.dirname(name)+'/'+new_name))
 
 
@@ -212,45 +212,54 @@ def encrypt(folder, val=1):
 			files.append(file_)
 	for file_ in files:
 		encrypt_name(file_)
+	# now encrypt folder
+	encrypt_name(folder)
 
 
-def decrypt_name(name, val=1):
-	orig_name = ''
-	top_name = os.path.basename(name)
-	for char in top_name:
-		if (ord(char)>65 and ord(char) < 92 ) or (
-			ord(char) > 97 and ord(char) < 124):
-				orig_name += chr(ord(char) - val)
-		else:
-			orig_name += char
-	return orig_name
+
+def decrypt_name(name, val=1, decrypt=0):
+    orig_name = ''
+    top_name = os.path.basename(name)
+    for char in top_name:
+        if (ord(char)>65 and ord(char) < 92 ) or (
+            ord(char) > 97 and ord(char) < 124):
+                orig_name += chr(ord(char) - val)
+        else:
+            orig_name += char
+    # decrypt folder
+    if decrypt:
+        os.system('mv ' + posix_name(name) +  ' ' + posix_name(os.path.dirname(name)+'/'+orig_name))
+    return orig_name
 
 
-def decrypt_list(folder, val=1):
-	files = []
-	for content in os.listdir(folder):
-		if content.startswith('.'):
-			continue
-		file_= folder+'/'+content
-		if os.path.isdir(file_):
-			decrypt_list(file_)
-		else:
-			files.append(file_)
-	for file_ in files:
-		print("{:<30} : {}".format(folder, decrypt_name(file_)))
+def decrypt_list(folder, val=1, start=True):
+	return 'Not working'
+    files = []
+    for a, b, c in os.walk(folder):
+        print(a, b, c)
+        if content.startswith('.'):
+            continue
+        file_= folder+'/'+content
+        if os.path.isdir(file_):
+            decrypt_list(file_)
+        else:
+            files.append(file_)
+    for file_ in files:
+        print("{:<30} : {}".format(folder, decrypt_name(file_)))
 
 
-def decrypt(folder, val=1):
-	files = []
-	for content in os.listdir(folder):
-		if content.startswith('.'):
-			continue
-		file_= folder+'/'+content
-		if os.path.isdir(file_):
-			decrypt(file_)
-		else:
-			files.append(file_)
-	for file_ in files:
-		orig_name = decrypt_name(file_)
-		os.system('mv ' +  posix_name(file_) + ' ' + posix_name(os.path.dirname(file_) + '/' + orig_name))
-
+def decrypt(folder, val=1, start=True):
+    files = []
+    for content in os.listdir(folder):
+        if content.startswith('.'):
+            continue
+        file_= folder+'/'+content
+        if os.path.isdir(file_):
+            decrypt(file_, start=False)
+        else:
+            files.append(file_)
+    for file_ in files:
+        decrypt_name(file_)
+        
+    if not start:
+        decrypt_name(folder)
