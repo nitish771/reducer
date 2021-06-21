@@ -233,7 +233,7 @@ def decrypt_name(name, val=1, decrypt=0):
 
 
 def decrypt_list(folder, val=1, start=True):
-	return 'Not working'
+    return 'Not working'
     files = []
     for a, b, c in os.walk(folder):
         print(a, b, c)

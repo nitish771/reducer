@@ -79,9 +79,8 @@ local  :- To Where | gdrive url
         if os.path.exists(file.replace(self.remote, self.local)):
             orig_size, comp_size, status = is_incomplete(file.replace(self.remote, self.local), file)
             if status:  # incomplete
-                print(saveas, ' not compressed completely')
-                print(f'orig Size {orig_size//1024**2}MB : compressed Size {comp_size//1024**2}MB')
-                print('removing file')
+                print(f'AC/CS {orig_size//1024**2}MB : compressed Size {comp_size//1024**2}MB')
+                print(saveas.replace(self.local, ''), ' compression incomplete')
                 os.unlink(file.replace(self.remote, self.local))
 
         if self.should(saveas):
