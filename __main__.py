@@ -1,5 +1,5 @@
 import os
-from multiprocessing import Pool
+from multiprocessing import Pool, Process, Value
 from random import shuffle
 from .utils import encrypt, is_incomplete
 from .removeDups import remove
@@ -45,73 +45,69 @@ local  :- To Where | gdrive url
     def valid_unix_name(self, name):
         return '"'+name+'"'
 
-    # fine
     def make_dirs(self, folder):
-        # print('Makeing Directories Copy')
+        # print('Making Directories Copy')
         os.chdir(folder)
         os.system('mkdir -p ' +
               self.valid_unix_name(folder.replace(self.remote, self.local)))
 
-        if self.quitIfFolderExists and os.path.exists(folder.replace(self.remote, self.local)):
-            # print('exists ', folder.replace(self.remote, self.local))
-            return
+        if self.quitIfFolderExists and os.path.exists(
+            folder.replace(self.remote, self.local)):
+                return
 
         for dirs in os.listdir(folder):
             if not dirs.split('/')[-1].startswith('.'):
                 new_content = folder + '/' + dirs
                 if os.path.isdir(new_content):
                     self.make_dirs(new_content)
-                # breakpoint()
 
     def should(self, file_name):
-        # print('s', file_name)
         s = os.path.exists(file_name[1:-1:])
         return not s
 
     def compress(self, file):
         # print('c', file)
-        saveas = self.valid_unix_name(file.replace(self.remote, self.local))
+        local_file = file.replace(self.remote, self.local)
+        saveas = self.valid_unix_name(local_file)
         # print('saveas', saveas, type(saveas), len(saveas))
         file_ext = file.split('.')[-1]
         file_name = file.replace(self.remote, '')
 
         # if exists check for size
-        if os.path.exists(file.replace(self.remote, self.local)):
-            orig_size, comp_size, status = is_incomplete(file.replace(self.remote, self.local), file)
+        if os.path.exists(local_file):
+            orig_size, comp_size, status = is_incomplete(local_file, file)
             if status:  # incomplete
                 print(saveas.replace(self.local, ''))
-                print(f'AC/CS {orig_size//1024**2}MB / {comp_size//1024**2}MB')
-                os.unlink(file.replace(self.remote, self.local))
-
-        if self.should(saveas):
-            if file_ext in self.not_down:
-                print('Moving ', file_name)
-                os.system('cp -r ' + self.valid_unix_name(file) + ' ' + saveas)
-            
-            elif file_ext in self.video:
-                ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
-                        -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
-                        -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
-                        -y -r 20 " + saveas
-                print('compressing\t', file_name)
-                os.system(ffmpeg_cmd + '  >  /dev/null')
-                print('Compressed\t', file_name)
-
-            else:
-                print('copying file :  ', file_name)
-                os.system('cp -r ' + self.valid_unix_name(file) + ' ' + saveas)
+                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB')
+                os.unlink(local_file)
+        else:
+            ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
+                    -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
+                    -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
+                    -y -r 20 " + saveas
+            print('compressing\t', file_name)
+            os.system(ffmpeg_cmd + '  >  /dev/null')
+            print('Compressed\t', file_name)
 
 
     def get_file(self, folder):
         os.chdir(folder)
         for file in os.listdir(folder):
             if not file.startswith('.'):
-                new_file = os.path.join(folder, file)
+                new_file = folder + '/' + file
                 if os.path.isfile(new_file):
+                    local_file = new_file.replace(self.remote, self.local)
+                    saveas = self.valid_unix_name(local_file)
+        
                     if new_file.split('.')[-1] in self.video:
                         self.files.append(new_file)
+                    elif new_file.split('.')[-1] in self.not_down:
+                        pass
+                    else:                
+                        print('copying file :  ', new_file)
+                        os.system('cp -r ' + self.valid_unix_name(file) + ' ' + saveas)
                 else:
-                    self.get_file(new_file)	
+                    self.get_file(new_file) 
 
     def main(self):
         pool = Pool()

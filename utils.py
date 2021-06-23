@@ -130,13 +130,31 @@ def get_size(file):
         return os.stat(file).st_size
     return 0
 
+def readable_size(size):
+
+    readable = 0
+    unit = 'B'
+    
+    if size>1024:
+        size /= 1024
+        unit = " KB"
+    if size>1024:
+        size /= 1024
+        unit = " MB"
+    if size>1024:
+        size /= 1024
+        unit = " GB"
+    return '{:.2f} {}'.format(size, unit)
 
 def total_size(folder, total=0):
     from pathlib import Path
-
+    
+    if os.path.isfile(folder):
+        return str(os.stat(folder).st_size/(1024**2)) + ' MB'
+    
     root_directory = Path(folder)
-    size = sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())/(1024**2)
-    return '{:.2f} MB'.format(size)
+    size = sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())
+    return readable_size(size)
 
 
 ##########################
@@ -322,3 +340,5 @@ def decrypt(folder, val=1, start=True):
     if not start:
         dec_fold = decrypt_name(folder)
         rename(folder, dec_fold)
+
+# print(total_size('/home/nk/Documents/CS_kNKBhVv.pdf'))
