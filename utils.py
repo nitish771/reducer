@@ -124,6 +124,21 @@ def extract(file, loc=None):
         print("unarchiving rar")
         os.system('rar e ' + posix_name(name) + '.rar')
 
+
+def get_size(file):
+    if os.path.isfile(file):
+        return os.stat(file).st_size
+    return 0
+
+
+def total_size(folder, total=0):
+    from pathlib import Path
+
+    root_directory = Path(folder)
+    size = sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())/(1024**2)
+    return '{:.2f} MB'.format(size)
+
+
 ##########################
 
 def is_incomplete(comp_file, orig_file):
