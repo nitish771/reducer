@@ -89,7 +89,6 @@ local  :- To Where | gdrive url
             os.system(ffmpeg_cmd + '  >  /dev/null')
             print('Compressed\t', file_name)
 
-
     def get_file(self, folder):
         os.chdir(folder)
         for file in os.listdir(folder):
@@ -104,7 +103,7 @@ local  :- To Where | gdrive url
                     elif new_file.split('.')[-1] in self.not_down:
                         pass
                     else:                
-                        print('copying file :  ', new_file)
+                        print('copying file :  ', new_file.replace(self.remote, ''))
                         os.system('cp -r ' + self.valid_unix_name(file) + ' ' + saveas)
                 else:
                     self.get_file(new_file) 
