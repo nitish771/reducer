@@ -70,7 +70,6 @@ local  :- To Where | gdrive url
         local_file = file.replace(self.remote, self.local)
         saveas = self.valid_unix_name(local_file)
         # print('saveas', saveas, type(saveas), len(saveas))
-        file_ext = file.split('.')[-1]
         file_name = file.replace(self.remote, '')
 
         # if exists check for size
@@ -97,14 +96,15 @@ local  :- To Where | gdrive url
                 if os.path.isfile(new_file):
                     local_file = new_file.replace(self.remote, self.local)
                     saveas = self.valid_unix_name(local_file)
+                    file_ext = new_file.split('.')[-1].lower()
         
-                    if new_file.split('.')[-1] in self.video:
+                    if file_ext in self.video:
                         self.files.append(new_file)
-                    elif new_file.split('.')[-1] in self.not_down:
+                    elif file_ext in self.not_down:
                         pass
-                    else:                
-                        print('copying file :  ', new_file.replace(self.remote, ''))
-                        os.system('cp -r ' + self.valid_unix_name(file) + ' ' + saveas)
+                    elif self.should(new_file):                
+                        print('copy :  ', new_file.replace(self.remote, ''))
+                        os.system('cp -r ' + self.valid_unix_name(new_file) + ' ' + saveas)
                 else:
                     self.get_file(new_file) 
 
