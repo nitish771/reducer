@@ -340,5 +340,3 @@ def decrypt(folder, val=1, start=True):
     if not start:
         dec_fold = decrypt_name(folder)
         rename(folder, dec_fold)
-
-# print(total_size('/home/nk/Documents/CS_kNKBhVv.pdf'))

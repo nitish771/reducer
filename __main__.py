@@ -10,14 +10,17 @@ class Compress:
     def __init__(self, remote=None, local=None, res="720", **kwargs):
         self.remote = remote
         self.local = local
+        self.value = Value('i', 0)
         
         if self.remote is None:
             self.remote = input("Enter Remote URL : ")
         if self.local is None:
             self.local = input("Enter Local URL : ")
 
-        self.value = Value('i', 0)
+
         self.count = kwargs.get('count', 1)
+        self.quitIfFolderExists = kwargs.get('quitIfFolderExists')
+        self.encrypt_ = kwargs.get('encrypt_')
         self.skip = 0
 
         self.top_dir = self.remote.split('/')[-1]        # name of the main folder
@@ -26,16 +29,12 @@ class Compress:
         self.video = ['mkv', 'mov', 'mp4']
         self.res = res # resolution
         self.not_down = ['vtt']
-        self.quitIfFolderExists = kwargs.get('quitIfFolderExists')
-        self.encrypt_ = kwargs.get('encrypt_')
 
         if self.count:
             self.count = self.count_files(self.remote,
                 hidden=kwargs.get('hidden'))
 
-        self.make_dirs(self.remote)    # make copies
         self.main()                    # start compressing
-
 
         if kwargs.get('delete_dup'):
             remove(self.local)
@@ -55,6 +54,9 @@ local  :- To Where | gdrive url
 
     def valid_unix_name(self, name):
         return '"'+name+'"'
+
+    def to_local(self, content):
+        return content.replace(self.remote, self.local)
 
     def count_files(self, folder, **kwargs):
         total=0
@@ -79,10 +81,9 @@ local  :- To Where | gdrive url
         # Making Directories Copy
         os.chdir(folder)
         os.system('mkdir -p ' +
-              self.valid_unix_name(folder.replace(self.remote, self.local)))
+              self.valid_unix_name(self.to_local(folder)))
 
-        if self.quitIfFolderExists and os.path.exists(
-            folder.replace(self.remote, self.local)):
+        if self.quitIfFolderExists and os.path.exists(self.to_local(folder)):
                 print('Quitting Folder Exists', folder)
                 sys.exit()
 
@@ -97,7 +98,7 @@ local  :- To Where | gdrive url
         return not s
 
     def shorten_name(self, name):
-        short = lambda x : x[:5]
+        short = lambda x : x[:3]
         shorten = '/'
 
         for i in name.split('/')[:-1]:
@@ -112,7 +113,7 @@ local  :- To Where | gdrive url
         return shorten
 
     def compress(self, file):
-        local_file = file.replace(self.remote, self.local)
+        local_file = self.to_local(file)
         saveas = self.valid_unix_name(local_file)
         file_name = file.replace(self.remote, '')
 
@@ -142,7 +143,7 @@ local  :- To Where | gdrive url
             if not file.startswith('.'):
                 new_file = folder + '/' + file
                 if os.path.isfile(new_file):
-                    local_file = new_file.replace(self.remote, self.local)
+                    local_file = self.to_local(new_file)
                     file_ext = new_file.split('.')[-1].lower()
         
                     if file_ext in self.video:
@@ -166,9 +167,10 @@ local  :- To Where | gdrive url
     def main(self):
 
         ## Get all files recursively
+        self.make_dirs(self.remote)    # make copies
         self.get_file(self.remote)
         shuffle(self.files)
-
+        
         len_ = len(self.files)
 
         if self.count:
