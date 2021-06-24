@@ -124,6 +124,7 @@ local  :- To Where | gdrive url
                 print(saveas.replace(self.local, ''))
                 print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB')
                 os.unlink(local_file)
+                self.compress(file)
         else:
             ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
                     -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \

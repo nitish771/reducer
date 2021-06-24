@@ -86,4 +86,3 @@ def remove(fold):
             print('removing ', i[1])
             os.system('rm -rf "' + i[1] + '"')
     files = []
-
