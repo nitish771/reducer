@@ -6,34 +6,34 @@ files = []
 
 
 def getFiles(fold):
-	global files
-	for i in os.listdir(fold):
-		new = fold+'/'+i
-		if os.path.isfile(new):
-			files.append(new)
-		else:
-			getFiles(new)
+    global files
+    for i in os.listdir(fold):
+        new = fold + '/' + i
+        if os.path.isfile(new):
+            files.append(new)
+        else:
+            getFiles(new)
 
 
 def isDup(f1, f2):
-	f1_ext = f1.split('.')[-1]
-	f2_ext = f2.split('.')[-1]
-	
-	if f1_ext == f2_ext:
-		return (f2 in [".".join(f1.split('.')[:-1])+'('+str(i)+').'+f1_ext for i in range(1, 6)] or
-			f2 in [".".join(f1.split('.')[:-1])+' ('+str(i)+').'+f1_ext for i in range(1, 6)]
-			)
-	return 0
+    f1_ext = f1.split('.')[-1]
+    f2_ext = f2.split('.')[-1]
+
+    if f1_ext == f2_ext:
+        return (f2 in [".".join(f1.split('.')[:-1]) +
+                   '(' + str(i) + ').' + f1_ext for i in range(1, 6)] or
+                f2 in [".".join(f1.split('.')[:-1]) + ' (' +
+                   str(i) + ').' + f1_ext for i in range(1, 6)])
+        return 0
 
 
 def remove(fold):
-	global files
-	getFiles(fold)
-	files.sort(key=lambda x:len(x))
-	for i in permutations(files, 2):
-		out = isDup(*i)
-		if out:
-			print('removing ', i[1])
-			os.system('rm -rf "' + i[1] + '"')
-	files = []
-
+    global files
+    getFiles(fold)
+    files.sort(key=lambda x: len(x))
+    for i in permutations(files, 2):
+        out = isDup(*i)
+        if out:
+            print('removing ', i[1])
+            os.system('rm -rf "' + i[1] + '"')
+    files = []

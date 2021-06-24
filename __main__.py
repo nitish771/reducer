@@ -1,22 +1,24 @@
 import os
-from multiprocessing import Pool, Process, Value
+import sys
+from multiprocessing import Process, Value
 from random import shuffle
-from .utils import encrypt, is_incomplete
-from .removeDups import remove
+from shutil import copy2
 
 
 class Compress:
 
-    def __init__(self, remote=None, local=None, res="720",
-                delete=False, encrypt_=False, quitIfFolderExists=0):
+    def __init__(self, remote=None, local=None, res="720", **kwargs):
         self.remote = remote
         self.local = local
-        self.encrypt_ = encrypt_
         
         if self.remote is None:
             self.remote = input("Enter Remote URL : ")
         if self.local is None:
             self.local = input("Enter Local URL : ")
+
+        self.value = Value('i', 0)
+        self.count = kwargs.get('count', 1)
+        self.skip = 0
 
         self.top_dir = self.remote.split('/')[-1]        # name of the main folder
         self.local = os.path.join(self.local, self.top_dir)   # local abs path
@@ -24,12 +26,21 @@ class Compress:
         self.video = ['mkv', 'mov', 'mp4']
         self.res = res # resolution
         self.not_down = ['vtt']
-        self.quitIfFolderExists = quitIfFolderExists
-        self.make_dirs(self.remote)                     # make copies
-        self.main()                                     # start compressing
-        if delete:
+        self.quitIfFolderExists = kwargs.get('quitIfFolderExists')
+        self.encrypt_ = kwargs.get('encrypt_')
+
+        if self.count:
+            self.count = self.count_files(self.remote,
+                hidden=kwargs.get('hidden'))
+
+        self.make_dirs(self.remote)    # make copies
+        self.main()                    # start compressing
+
+
+        if kwargs.get('delete_dup'):
             remove(self.local)
-        if encrypt_:
+
+        if kwargs.get('encrypt_'):
             encrypt(self.local)
 
     def __str__(self):
@@ -45,6 +56,25 @@ local  :- To Where | gdrive url
     def valid_unix_name(self, name):
         return '"'+name+'"'
 
+    def count_files(self, folder, **kwargs):
+        total=0
+        if os.path.isfile(folder):
+            return 1
+        else:  # folder
+            for file in os.listdir(folder):
+                if os.path.isfile(file):
+                    total += 1
+                elif kwargs.get('hidden'):
+                    total += self.count_files(folder+'/'+file)
+                elif not file.startswith('.'):
+                    total += self.count_files(folder+'/'+file)
+        return total
+
+    def counter(self):
+        with self.value.get_lock():
+                self.value.value += 1
+        print('T', self.count, '- C', self.value.value, '- S', self.skip, ' || ', end='')
+            
     def make_dirs(self, folder):
         # Making Directories Copy
         os.chdir(folder)
@@ -53,7 +83,8 @@ local  :- To Where | gdrive url
 
         if self.quitIfFolderExists and os.path.exists(
             folder.replace(self.remote, self.local)):
-                return
+                print('Quitting Folder Exists', folder)
+                sys.exit()
 
         for dirs in os.listdir(folder):
             if not dirs.split('/')[-1].startswith('.'):
@@ -64,6 +95,21 @@ local  :- To Where | gdrive url
     def should(self, file_name):
         s = os.path.exists(file_name)
         return not s
+
+    def shorten_name(self, name):
+        short = lambda x : x[:5]
+        shorten = '/'
+
+        for i in name.split('/')[:-1]:
+            if i:
+                if len(i)>10:
+                    for word in i.split()[:5]:
+                        shorten += short(word)+ '.. '
+                    shorten += '/'
+                else:
+                    shorten += short(i) + '/'
+        shorten += name.split('/')[-1]
+        return shorten
 
     def compress(self, file):
         local_file = file.replace(self.remote, self.local)
@@ -82,9 +128,13 @@ local  :- To Where | gdrive url
                     -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                     -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                     -y -r 20 " + saveas
-            print('compressing\t', file_name)
+            print('compressing\t', self.shorten_name(self.shorten_name(file_name)))
             os.system(ffmpeg_cmd + '  >  /dev/null')
-            print('Compressed\t', file_name)
+
+            if self.count:
+                self.counter()
+
+            print('Compressed\t', self.shorten_name(file_name.split('/')[-1]))
 
     def get_file(self, folder):
         os.chdir(folder)
@@ -93,24 +143,57 @@ local  :- To Where | gdrive url
                 new_file = folder + '/' + file
                 if os.path.isfile(new_file):
                     local_file = new_file.replace(self.remote, self.local)
-                    saveas = self.valid_unix_name(local_file)
                     file_ext = new_file.split('.')[-1].lower()
         
                     if file_ext in self.video:
                         self.files.append(new_file)
                     elif file_ext in self.not_down:
-                        pass
-                    elif self.should(local_file):                
-                        print('copy :  ', new_file.replace(self.remote, ''))
-                        os.system('cp -r ' + self.valid_unix_name(new_file) + ' ' + saveas)
+                        self.skip += 1
+                    elif self.should(local_file):
+                        try:
+                            print('copy : ', self.shorten_name(new_file.replace(self.remote, '')))
+                            copy2(new_file, local_file)
+                            self.skip += 1
+                            if self.count:
+                                self.counter()
+                        except Exception as e:
+                            print(e)
+                    else:
+                        self.skip += 1
                 else:
                     self.get_file(new_file) 
 
     def main(self):
-        pool = Pool()
 
         ## Get all files recursively
         self.get_file(self.remote)
         shuffle(self.files)
-        pool.map(self.compress, self.files)
+
+        len_ = len(self.files)
+
+        if self.count:
+            print('Total files', self.count)
+
+        for i in range(0, len_-1, 2):
+            p1 = Process(target=self.compress, args=(self.files[i], ))
+            p2 = Process(target=self.compress, args=(self.files[i+1], ))
+            p1.start()
+            p2.start()
+            p1.join()
+            p2.join()
+
+        if len_%2:
+            p3 = Process(target=self.compress, args=(self.files[-1], ))
+            p3.start()
+            p3.join()
+
         print("Done")
+
+
+if __name__ == '__main__':
+    from utils import encrypt, is_incomplete
+    from removeDups import remove
+
+else:
+    from .utils import encrypt, is_incomplete
+    from .removeDups import remove
