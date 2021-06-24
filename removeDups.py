@@ -1,6 +1,6 @@
 import os
 from itertools import permutations
-
+import shutil
 
 files = []
 
@@ -27,10 +27,59 @@ def isDup(f1, f2):
         return 0
 
 
+def merge_items_and_delete(main_fold, copy_folders: list):
+    for fold in copy_folders:
+        for item in os.listdir(fold):
+            shutil.copy2(fold+'/'+item, main_fold)
+        print('deleting', fold)
+        shutil.rmtree(fold)
+
+
+def confirm_copy_folders(folders: dict):
+    confirm = {}
+    for key, values in folders.items():
+        for value in values:
+            if value in [ key + ' (' + str(i) + ')' for i in range(1, 6)] \
+                or value in [ key + '(' + str(i) + ')' for i in range(1, 6)]:
+                    if confirm.get(key):
+                        confirm[key].append(value)
+                    else:
+                        confirm[key] = [value]
+    return confirm
+
+
+def possible_copy_folders(folder):
+    folders = []
+    possible = {}
+    for fold in os.listdir(folder):
+        new_content = folder+'/'+fold
+        if os.path.isdir(new_content):
+            folders.append(new_content)
+    folders = sorted(folders)
+    cur = 0
+    for i in range(1, len(folders)):
+        if folders[cur] in folders[i]:
+            if possible.get(folders[cur]):
+                possible[folders[cur]].append(folders[i])
+            else:
+                possible[folders[cur]] = [folders[i]]
+        else:
+            cur = i
+    return confirm_copy_folders(possible)
+
+
+def dup_folder(folder):
+    for key, items in possible_copy_folders(folder).items():
+        merge_items_and_delete(key, items)
+
 def remove(fold):
     global files
+
+    dup_folder(fold)
     getFiles(fold)
+
     files.sort(key=lambda x: len(x))
+
     for i in permutations(files, 2):
         out = isDup(*i)
         if out:
