@@ -2,7 +2,7 @@ import os
 import sys
 from multiprocessing import Process, Value
 from random import shuffle
-from shutil import copy2
+from shutil import copy
 
 
 class Compress:
@@ -16,7 +16,6 @@ class Compress:
             self.remote = input("Enter Remote URL : ")
         if self.local is None:
             self.local = input("Enter Local URL : ")
-
 
         self.count = kwargs.get('count', 1)
         self.quitIfFolderExists = kwargs.get('quitIfFolderExists')
@@ -62,20 +61,21 @@ local  :- To Where | gdrive url
         total=0
         if os.path.isfile(folder):
             return 1
-        else:  # folder
-            for file in os.listdir(folder):
-                if os.path.isfile(file):
-                    total += 1
-                elif kwargs.get('hidden'):
-                    total += self.count_files(folder+'/'+file)
-                elif not file.startswith('.'):
-                    total += self.count_files(folder+'/'+file)
+        # folder
+        for file in os.listdir(folder):
+            if os.path.isfile(file):
+                total += 1
+            elif kwargs.get('hidden'):
+                total += self.count_files(folder+'/'+file)
+            elif not file.startswith('.'):
+                total += self.count_files(folder+'/'+file)
         return total
 
     def counter(self):
         with self.value.get_lock():
                 self.value.value += 1
-        print('T', self.count, '- C', self.value.value, '- S', self.skip, ' || ', end='')
+        print('T', self.count, '-C', self.value.value, '-S', self.skip,
+            '-R', (self.count-self.value.value-self.skip), ' || ', end='', sep='')
             
     def make_dirs(self, folder):
         # Making Directories Copy
@@ -104,7 +104,7 @@ local  :- To Where | gdrive url
         for i in name.split('/')[:-1]:
             if i:
                 if len(i)>10:
-                    for word in i.split()[:5]:
+                    for word in i.split()[:3]:
                         shorten += short(word)+ '.. '
                     shorten += '/'
                 else:
@@ -154,7 +154,7 @@ local  :- To Where | gdrive url
                     elif self.should(local_file):
                         try:
                             print('copy : ', self.shorten_name(new_file.replace(self.remote, '')))
-                            copy2(new_file, local_file)
+                            copy(new_file, local_file)
                             self.skip += 1
                             if self.count:
                                 self.counter()
@@ -200,5 +200,3 @@ if __name__ == '__main__':
 else:
     from .utils import encrypt, is_incomplete
     from .removeDups import remove
-
-Compress('/home/nk/Downloads/checking/', '/home/nk/Documents')

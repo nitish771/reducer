@@ -30,7 +30,10 @@ def isDup(f1, f2):
 def merge_items_and_delete(main_fold, copy_folders: list):
     for fold in copy_folders:
         for item in os.listdir(fold):
-            shutil.copy2(fold+'/'+item, main_fold)
+            try:
+                shutil.copy(fold+'/'+item, main_fold)
+            except Exception as e:
+                continue
         print('deleting', fold)
         shutil.rmtree(fold)
 

@@ -315,11 +315,6 @@ def decrypt_list(folder, val=1, start=True, level=1, **kwargs):
     for fold in folders:
         if search:
             return decrypt_list(fold, start=False, level=level+1, search=search)
-            # if start and results:
-            #     if search:
-            #         print('Your searched items is/are at - \n')
-            #     for res in results:
-            #         print(res)
         else:
             decrypt_list(fold, start=False, level=level+1)
 
