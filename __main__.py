@@ -199,3 +199,5 @@ if __name__ == '__main__':
 else:
     from .utils import encrypt, is_incomplete
     from .removeDups import remove
+
+Compress('/home/nk/Downloads/checking/', '/home/nk/Documents')
