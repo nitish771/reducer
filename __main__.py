@@ -46,7 +46,7 @@ local  :- To Where | gdrive url
         return '"'+name+'"'
 
     def make_dirs(self, folder):
-        # print('Making Directories Copy')
+        # Making Directories Copy
         os.chdir(folder)
         os.system('mkdir -p ' +
               self.valid_unix_name(folder.replace(self.remote, self.local)))
@@ -62,14 +62,12 @@ local  :- To Where | gdrive url
                     self.make_dirs(new_content)
 
     def should(self, file_name):
-        s = os.path.exists(file_name[1:-1:])
+        s = os.path.exists(file_name)
         return not s
 
     def compress(self, file):
-        # print('c', file)
         local_file = file.replace(self.remote, self.local)
         saveas = self.valid_unix_name(local_file)
-        # print('saveas', saveas, type(saveas), len(saveas))
         file_name = file.replace(self.remote, '')
 
         # if exists check for size
@@ -102,7 +100,7 @@ local  :- To Where | gdrive url
                         self.files.append(new_file)
                     elif file_ext in self.not_down:
                         pass
-                    elif self.should(new_file):                
+                    elif self.should(local_file):                
                         print('copy :  ', new_file.replace(self.remote, ''))
                         os.system('cp -r ' + self.valid_unix_name(new_file) + ' ' + saveas)
                 else:
@@ -116,4 +114,3 @@ local  :- To Where | gdrive url
         shuffle(self.files)
         pool.map(self.compress, self.files)
         print("Done")
-
