@@ -35,31 +35,43 @@ def merge_items_and_delete(main_fold, copy_folders: list):
             except Exception as e:
                 continue
         print('deleting', fold)
-        shutil.rmtree(fold)
-
+        try:
+            shutil.rmtree(fold)
+        except Exception as e:
+            print(e)
 
 def confirm_copy_folders(folders: dict):
     confirm = {}
     for key, values in folders.items():
         for value in values:
-            if value in [ key + ' (' + str(i) + ')' for i in range(1, 6)] \
-                or value in [ key + '(' + str(i) + ')' for i in range(1, 6)]:
-                    if confirm.get(key):
-                        confirm[key].append(value)
+            # print(value)
+            for val in [ value + ' (' + str(i) + ')' for i in range(1, 6)]:
+                if os.path.exists(val):
+                    if confirm.get(value):
+                        confirm[value].append([val])
                     else:
-                        confirm[key] = [value]
+                        confirm[value] = [val]
+                    print('found', value)
     return confirm
+
+
+def get_folders(folder, folders):
+    for i in os.listdir(folder):
+        new = folder+'/'+i
+        if os.path.isdir(new):
+            get_folders(new, folders)
+            folders.append(new)
 
 
 def possible_copy_folders(folder):
     folders = []
     possible = {}
-    for fold in os.listdir(folder):
-        new_content = folder+'/'+fold
-        if os.path.isdir(new_content):
-            folders.append(new_content)
+    
+    get_folders(folder, folders)
+
     folders = sorted(folders)
     cur = 0
+
     for i in range(1, len(folders)):
         if folders[cur] in folders[i]:
             if possible.get(folders[cur]):
@@ -89,3 +101,4 @@ def remove(fold):
             print('removing ', i[1])
             os.system('rm -rf "' + i[1] + '"')
     files = []
+

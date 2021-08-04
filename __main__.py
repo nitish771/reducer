@@ -11,7 +11,7 @@ class Compress:
         self.remote = remote
         self.local = local
         self.value = Value('i', 0)
-        
+
         if self.remote is None:
             self.remote = input("Enter Remote URL : ")
         if self.local is None:
@@ -76,7 +76,7 @@ local  :- To Where | gdrive url
                 self.value.value += 1
         print('T', self.count, '-C', self.value.value, '-S', self.skip,
             '-R', (self.count-self.value.value-self.skip), ' || ', end='', sep='')
-            
+
     def make_dirs(self, folder):
         # Making Directories Copy
         os.chdir(folder)
@@ -146,7 +146,7 @@ local  :- To Where | gdrive url
                 if os.path.isfile(new_file):
                     local_file = self.to_local(new_file)
                     file_ext = new_file.split('.')[-1].lower()
-        
+
                     if file_ext in self.video:
                         self.files.append(new_file)
                     elif file_ext in self.not_down:
@@ -171,7 +171,7 @@ local  :- To Where | gdrive url
         self.make_dirs(self.remote)    # make copies
         self.get_file(self.remote)
         shuffle(self.files)
-        
+
         len_ = len(self.files)
 
         if self.count:
