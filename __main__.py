@@ -8,6 +8,7 @@ from shutil import copy
 class Compress:
 
     def __init__(self, remote=None, local=None, res="720", **kwargs):
+        self.kwargs = kwargs
         self.remote = remote
         self.local = local
         self.value = Value('i', 0)
@@ -170,7 +171,9 @@ local  :- To Where | gdrive url
         ## Get all files recursively
         self.make_dirs(self.remote)    # make copies
         self.get_file(self.remote)
-        shuffle(self.files)
+        if self.kwargs.get('shuffle'):
+            print('shuffling')
+            shuffle(self.files)
 
         len_ = len(self.files)
 
