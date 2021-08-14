@@ -174,7 +174,13 @@ local  :- To Where | gdrive url
         if self.kwargs.get('shuffle'):
             print('shuffling')
             shuffle(self.files)
-
+        else:
+            try:
+                self.files = sorted(self.files, key=sort_func)
+                print(self.files)
+            except Exception as e:
+                print(e)
+                self.files = sorted(self.files)
         len_ = len(self.files)
 
         if self.count:
@@ -196,10 +202,17 @@ local  :- To Where | gdrive url
         print("Done")
 
 
+def sort_func( name):
+    import re
+    regex = re.compile(r'\d+$')
+    string = name.split('/')[-1].split('.')[0]
+    num = int(regex.findall(string)[0])
+    return num
+
+
 if __name__ == '__main__':
     from utils import encrypt, is_incomplete
     from removeDups import remove
-
 else:
     from .utils import encrypt, is_incomplete
     from .removeDups import remove
