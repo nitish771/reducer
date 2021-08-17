@@ -110,6 +110,24 @@ def compress(folder, format='zip', name=None, loc=None, delete=False):
         os.system('rm -rf ' + posix_name(folder))
 
 
+def convert(file_name, saveas=None,  to="mp3"):
+    file_ext = file_name.split('.')[-1]
+    if not saveas:
+        saveas = os.path.dirname(file_name) + '/' + file_name.split('/')[-1].replace(file_ext, to)
+
+    # if exists quit
+    if os.path.exists(saveas):
+        print('Skipping', file_name)
+        return
+
+    print(file_name, saveas, end='\n')
+    ffmpeg_cmd = "ffmpeg -i " + posix_name(file_name) + "\
+            -map 0:a:0 -b:a 26k -y " + saveas
+    print('Converting\t', file_name)
+    os.system(ffmpeg_cmd + '  >  /dev/null')
+    print('Compressed\t', file_name.split('/')[-1])
+
+
 def extract(file, loc=None):
     name, format = ".".join(file.split('.')[:-1]), file.split('.')[-1]
     if loc:
@@ -130,6 +148,7 @@ def get_size(file):
         return os.stat(file).st_size
     return 0
 
+
 def readable_size(size):
 
     readable = 0
@@ -145,6 +164,7 @@ def readable_size(size):
         size /= 1024
         unit = " GB"
     return '{:.2f} {}'.format(size, unit)
+
 
 def total_size(folder, total=0):
     from pathlib import Path

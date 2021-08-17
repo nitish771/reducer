@@ -5,12 +5,16 @@ from random import shuffle
 from shutil import copy
 
 
+CPU_COUNT = os.cpu_count()
+
+
 class Compress:
 
-    def __init__(self, remote=None, local=None, res="720", **kwargs):
+    def __init__(self, remote=None, local=None, **kwargs):
         self.kwargs = kwargs
         self.remote = remote
         self.local = local
+        # Semaphore to count files compressed
         self.value = Value('i', 0)
 
         if self.remote is None:
@@ -18,7 +22,6 @@ class Compress:
         if self.local is None:
             self.local = input("Enter Local URL : ")
 
-        self.count = kwargs.get('count', 1)
         self.quitIfFolderExists = kwargs.get('quitIfFolderExists')
         self.encrypt_ = kwargs.get('encrypt_')
         self.skip = 0
@@ -27,14 +30,20 @@ class Compress:
         self.local = os.path.join(self.local, self.top_dir)   # local abs path
         self.files = []                                  # files to compress
         self.video = ['mkv', 'mov', 'mp4']
-        self.res = res # resolution
+        
+        # resolution
+        if kwargs.get('res'):
+            self.res = kwargs.get('res')
+        else:
+            self.res = '720'
+
         self.not_down = ['vtt']
 
-        if self.count:
+        if kwargs.get('count', 1):
             self.count = self.count_files(self.remote,
                 hidden=kwargs.get('hidden'))
 
-        self.main()                    # start compressing
+        self.main(kwargs)                    # start compressing
 
         if kwargs.get('delete_dup'):
             remove(self.local)
@@ -45,8 +54,8 @@ class Compress:
     def __str__(self):
         return '''
 Parms  :-
-remote :- From Where | Gdrive url
-local  :- To Where | gdrive url
+    remote :- From Where | Gdrive url
+    local  :- To Where | gdrive url
 '''
 
     def add_not_down(self, xt):
@@ -139,6 +148,12 @@ local  :- To Where | gdrive url
 
             print('Compressed\t', self.shorten_name(file_name.split('/')[-1]))
 
+    def convert(self, file, ext="mp3"):
+        file_ext = file.split('.')[-1]
+        saveas = (file.replace(file_ext, ext)).replace(self.remote, self.local)
+        # print(saveas)
+        convert(file, saveas=saveas, to=ext)
+
     def get_file(self, folder):
         os.chdir(folder)
         for file in os.listdir(folder):
@@ -155,47 +170,54 @@ local  :- To Where | gdrive url
                     elif self.should(local_file):
                         try:
                             print('copy : ', self.shorten_name(new_file.replace(self.remote, '')))
+                            print(new_file, local_file)
                             copy(new_file, local_file)
                             self.skip += 1
                             if self.count:
                                 self.counter()
                         except Exception as e:
                             print(e)
+                            print(e)
                     else:
                         self.skip += 1
                 else:
                     self.get_file(new_file) 
 
-    def main(self):
+    def main(self, kwargs):
 
         ## Get all files recursively
         self.make_dirs(self.remote)    # make copies
-        self.get_file(self.remote)
-        if self.kwargs.get('shuffle'):
-            print('shuffling')
+        self.get_file(self.remote)     # list all files
+
+        if kwargs.get('shuffle'):
             shuffle(self.files)
         else:
             try:
                 self.files = sorted(self.files, key=sort_func)
                 print(self.files)
             except Exception as e:
-                print(e)
+                print('Can\'t sort with custom function\n', str(e))
                 self.files = sorted(self.files)
         len_ = len(self.files)
 
         if self.count:
             print('Total files', self.count)
 
+        target = eval(f"self.{kwargs.get('cmd', 'compress')}")
+
         for i in range(0, len_-1, 2):
-            p1 = Process(target=self.compress, args=(self.files[i], ))
-            p2 = Process(target=self.compress, args=(self.files[i+1], ))
+            p1 = Process(target=target, args=(self.files[i], kwargs.get('ext', 'mp3')))
+            p2 = Process(target=target, args=(self.files[i+1], kwargs.get('ext', 'mp3')))
             p1.start()
             p2.start()
             p1.join()
             p2.join()
 
         if len_%2:
-            p3 = Process(target=self.compress, args=(self.files[-1], ))
+            if kwargs.get('ext'):
+                p3 = Process(target=target, args=(self.files[-1], "mp3"))
+            else:
+                p3 = Process(target=target, args=(self.files[-1], ))
             p3.start()
             p3.join()
 
@@ -211,8 +233,10 @@ def sort_func( name):
 
 
 if __name__ == '__main__':
-    from utils import encrypt, is_incomplete
+    from utils import encrypt, is_incomplete, convert
     from removeDups import remove
+    Compress("/home/nk/Videos", "/home/nk/playground", cmd="convert")
+
 else:
-    from .utils import encrypt, is_incomplete
+    from .utils import encrypt, is_incomplete, convert
     from .removeDups import remove
