@@ -122,7 +122,7 @@ def convert(file_name, saveas=None,  to="mp3"):
 
     print(file_name, saveas, end='\n')
     ffmpeg_cmd = "ffmpeg -i " + posix_name(file_name) + "\
-            -map 0:a:0 -b:a 26k -y " + saveas
+            -map 0:a:0 -b:a 26k -y " + posix_name(saveas)
     print('Converting\t', file_name)
     os.system(ffmpeg_cmd + '  >  /dev/null')
     print('Compressed\t', file_name.split('/')[-1])
