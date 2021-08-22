@@ -106,7 +106,7 @@ def confirm_copy_folders(folder):
                     else:
                         confirm[key] = [value]
             except IndexError as e:
-                print(e)
+                pass
     return confirm
 
 

@@ -142,7 +142,7 @@ class Compress:
                 print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB')
                 os.unlink(local_file)
         
-        ffmpeg_cmd = "echo ffmpeg -i " + self.valid_unix_name(file) + "\
+        ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
                 -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                 -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                 -y -r 20 " + saveas
@@ -164,7 +164,6 @@ class Compress:
         # print(saveas)
         local_name = self.to_local(file)
         file_name = file.replace(self.remote, '')
-        # return 
 
         # if exists check for size
         if os.path.exists(file_name):
@@ -231,6 +230,9 @@ class Compress:
                     self.get_file(new_file) 
 
     def main(self, kwargs):
+        if self.count:
+            print('Total files', self.count)
+
 
         ## Get all files recursively
         self.make_dirs(self.remote)    # make copies
@@ -241,14 +243,10 @@ class Compress:
         else:
             try:
                 self.files = sorted(self.files, key=sort_func)
-                print(self.files)
             except Exception as e:
                 print('Can\'t sort with custom function\n', str(e))
                 self.files = sorted(self.files)
         len_ = len(self.files)
-
-        if self.count:
-            print('Total files', self.count)
 
         target = eval(f"self.{kwargs.get('cmd', 'compress')}")
 
@@ -285,11 +283,11 @@ class Compress:
 def sort_func( name):
     import re
     regex = re.compile(r'\d+$')
-    string = name.split('/')[-1].split('.')[0]
+    string = name.split('/')[-1]
     try:
         num = int(regex.findall(string)[0])
     except:
-        pass
+        num = ''
     return num
 
 
@@ -297,6 +295,7 @@ if __name__ == '__main__':
     from utils import encrypt, is_incomplete, convert
     from removeDups import remove
     Compress('/home/nk/Videos', '/home/nk/playground', cmd="convert", count=1,)
+    # remove('/home/nk/playground/Videos')
 
 else:
     from .utils import encrypt, is_incomplete, convert
