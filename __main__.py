@@ -130,7 +130,7 @@ class Compress:
         local_file = self.to_local(file)
         saveas = self.valid_unix_name(local_file)
         file_name = file.replace(self.remote, '')
-        print('compressing', file)
+
 
         # if exists check for size
         if os.path.exists(local_file):
@@ -138,7 +138,6 @@ class Compress:
             if not status:  # not incomplete
                 return 
             else:
-                print(saveas.replace(self.local, ''))
                 print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB')
                 os.unlink(local_file)
         
@@ -146,16 +145,18 @@ class Compress:
                 -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                 -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                 -y -r 20 " + saveas
+
+        if self.count:
+            self.counter()
+
         print('compressing\t', self.shorten_name(self.shorten_name(file_name)))
+        
         os.system(ffmpeg_cmd)
 
         # increase compresed files value
         with self.value.get_lock():
             self.value.value += 1
         
-        if self.count:
-            self.counter()
-
         print('Compressed\t', self.shorten_name(file_name.split('/')[-1]))
         
     def convert(self, file, ext="mp3"):
