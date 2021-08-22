@@ -294,9 +294,6 @@ def sort_func( name):
 if __name__ == '__main__':
     from utils import encrypt, is_incomplete, convert
     from removeDups import remove
-    Compress('/home/nk/Videos', '/home/nk/playground', cmd="convert", count=1,)
-    # remove('/home/nk/playground/Videos')
-
 else:
     from .utils import encrypt, is_incomplete, convert
     from .removeDups import remove
