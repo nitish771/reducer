@@ -1,6 +1,9 @@
 import os
 from itertools import permutations
 import shutil
+import re
+# from pdb import set_trace
+
 
 files = []
 
@@ -15,15 +18,32 @@ def getFiles(fold):
             getFiles(new)
 
 
+def regexify(name):
+    new_name = ''
+    for char in name:
+        if char == '(':
+            new_name += '\('
+        elif char == ')':
+            new_name += '\)'
+        else:
+            new_name += char
+    return new_name
+
+
 def isDup(f1, f2):
     f1_ext = f1.split('.')[-1]
     f2_ext = f2.split('.')[-1]
 
-    if f1_ext == f2_ext:
-        return (f2 in [".".join(f1.split('.')[:-1]) +
-                       '(' + str(i) + ').' + f1_ext for i in range(1, 6)] or
-                f2 in [".".join(f1.split('.')[:-1]) + ' (' +
-                       str(i) + ').' + f1_ext for i in range(1, 6)])
+    if (f1_ext == f2_ext) or (len(f1.split('.')) == 1 and  len(f2.split('.')) == 1 ) :
+        key = regexify(min(f1, f2))
+        copy = f1 if key!=f1 else f2
+
+        re_ptrn = re.compile(rf'^({key}(\s\(\d\))+)$')
+        try:
+            if (re_ptrn.findall(copy)[0][0]):
+                return 1
+        except Exception as e:
+            pass
         return 0
 
 
@@ -42,6 +62,8 @@ def merge_items_and_delete(main_fold, copy_folders: list):
 
 
 def get_folders(folder, folders):
+    '''Get all the subfolders '''
+
     for i in os.listdir(folder):
         new = folder + '/' + i
         if os.path.isdir(new):
@@ -52,6 +74,7 @@ def get_folders(folder, folders):
 def possible_copy_folders(folder):
     folders = []
     possible = {}
+    top_dir = os.path.dirname(folder)
 
     get_folders(folder, folders)
 
@@ -66,23 +89,24 @@ def possible_copy_folders(folder):
                 possible[folders[cur]] = [folders[i]]
         else:
             cur = i
+    # print(possible)
     return possible
 
 
 def confirm_copy_folders(folder):
     folders = possible_copy_folders(folder)  # dict
     confirm = {}
-
     for key, values in folders.items():
+        re_ptrn = re.compile(rf'^({key}(\s\(\d\))+)$')
         for value in values:
-            # print(value)
-            for val in [value + ' (' + str(i) + ')' for i in range(1, 6)]:
-                if os.path.exists(val):
-                    if confirm.get(value):
-                        confirm[value].append([val])
+            try:
+                if re_ptrn.findall(value)[0][0] == value:
+                    if confirm.get(key):
+                        confirm[key].append(value)
                     else:
-                        confirm[value] = [val]
-                    print('found', value)
+                        confirm[key] = [value]
+            except IndexError as e:
+                print(e)
     return confirm
 
 
