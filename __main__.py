@@ -136,8 +136,12 @@ class Compress:
         if os.path.exists(local_file):
             # checking here if incomplete recompress
             orig_size, comp_size, status = is_incomplete(local_file, file)
+
             if not status:  # not incomplete
                 return 
+            elif comp_size > orig_size:
+                # check here if res in wrong
+                raise ValueError("Incorrect resolution. Try lower resolution\nFile", file_name)        
             else:
                 print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB')
                 os.unlink(local_file)
@@ -146,11 +150,6 @@ class Compress:
                 -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                 -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                 -y -r 20 " + saveas
-
-        # check here if res in wrong
-        orig_size, comp_size, status = is_incomplete(saveas, file)
-        if comp_size > orig_size:
-            raise ValueError("Incorrect resolution. Try lower resolution\nFile", file_name)
 
         if self.count:
             self.counter()
@@ -300,6 +299,7 @@ def sort_func( name):
 if __name__ == '__main__':
     from utils import encrypt, is_incomplete, convert
     from removeDups import remove
+    Compress('/home/nk/Videos', '/home/nk/playground')
 else:
     from .utils import encrypt, is_incomplete, convert
     from .removeDups import remove
