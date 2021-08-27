@@ -12,9 +12,7 @@ def download(url, loc=None):
 
 
 def copy_to(src, dest, delete=False):
-    '''
-    copy content from one place to another
-    '''
+    '''copy content from one place to another'''
     import shutil
 
     if delete:
@@ -247,14 +245,16 @@ def rename(old_name, new_name):
     os.system('mv ' + posix_name(old_name) +  ' ' + posix_name(new_name))
 
 
-def encrypted_name(name, val=1):
+def encrypted_name(name, shift=1):
     top_name = os.path.basename(name)
     new_name = ''
     for char in top_name:
-        # change only alphabets (65=A, 97=a)
+        # change only alphabets (65=A, Z=90, 97=a, z=122)
         if (ord(char)>64 and ord(char) < 91) or (
             ord(char) > 96 and ord(char) < 123):
-                new_name += chr(ord(char) + val)
+                new_name += chr(ord(char) + shift)
+        elif ord(char)==91:
+            new_name += '~'
         else:
             new_name += char
     # renmae files and folder
@@ -263,20 +263,23 @@ def encrypted_name(name, val=1):
 
 def encrypt(folder, val=1, start=True):
     files = []
+
+    if os.path.isfile(folder):
+        decrypt_name(folder, val)
+        return
+
     for content in os.listdir(folder):
-        if content.startswith('.'):  # hidden files of dirs
-            continue
         file_ = folder + '/' + content
         if os.path.isdir(file_):
             encrypt(file_, start=False)
         else:
             files.append(file_)
 
-    # deepest dir
-    for file_ in files:
-        new_name = encrypted_name(file_)
-        # print(file_, new_name)
-        rename(file_, new_name)
+    # from deepest dir
+    for file_name in files:
+        new_name = encrypted_name(file_name)
+        # print(file_name, new_name)
+        rename(file_name, new_name)
 
     # now encrypt folder
     if start:
@@ -284,19 +287,20 @@ def encrypt(folder, val=1, start=True):
         rename(folder, os.path.join(os.path.dirname(folder) ,rev_name))
     if not start:
         new_folder = encrypted_name(folder)
-        # print(folder, new_folder)
         rename(folder, new_folder)
 
 
 ###########################
 
-def decrypt_name(name, val=1):
+def decrypt_name(name, shift=1):
     orig_name = ''
     top_name = os.path.basename(name)
     for char in top_name:
         if (ord(char)>65 and ord(char) < 92 ) or (
             ord(char) > 97 and ord(char) < 124):
-                orig_name += chr(ord(char) - val)
+                orig_name += chr(ord(char) - shift)
+        elif ord(char) == 126:
+            orig_name += '['
         else:
             orig_name += char
     return os.path.join(os.path.dirname(name), orig_name)
@@ -317,6 +321,7 @@ def decrypt_list(folder, val=1, start=True, level=1, **kwargs):
                 folders.append(new_content)
     if start:
         print('='*50)
+        folder = os.path.dirname(folder) + '/' + os.path.basename(folder)[::-1]
         print('    ' * (level - 1) + folder + '/')
     else:
         folder = decrypt_name(folder)
@@ -343,6 +348,9 @@ def decrypt_list(folder, val=1, start=True, level=1, **kwargs):
 
 def decrypt(folder, val=1, start=True):
     files = []
+    if os.path.isfile(folder):
+        decrypt_name(folder, val)
+        return
     for content in os.listdir(folder):
         if content.startswith('.'):
             continue
@@ -354,6 +362,9 @@ def decrypt(folder, val=1, start=True):
     for file in files:
         dec_name = decrypt_name(file)
         rename(file, dec_name)
+    if start:
+        rev_name = folder.split('/')[-1][::-1]
+        rename(folder, os.path.join(os.path.dirname(folder) ,rev_name))
     if not start:
         dec_fold = decrypt_name(folder)
         rename(folder, dec_fold)

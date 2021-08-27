@@ -21,7 +21,7 @@ class Compress:
         if self.local is None:
             self.local = input("Enter Local URL : ")
 
-        self.encrypt_ = kwargs.get('encrypt_')
+        self.encrypt_ = kwargs.get('encrypt_')  # encrypt while compressing
         self.skip = 0
 
         self.top_dir = self.remote.split('/')[-1]    # name of the main folder
@@ -134,6 +134,7 @@ class Compress:
 
         # if exists check for size
         if os.path.exists(local_file):
+            # checking here if incomplete recompress
             orig_size, comp_size, status = is_incomplete(local_file, file)
             if not status:  # not incomplete
                 return 
@@ -145,6 +146,11 @@ class Compress:
                 -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                 -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                 -y -r 20 " + saveas
+
+        # check here if res in wrong
+        orig_size, comp_size, status = is_incomplete(saveas, file)
+        if comp_size > orig_size:
+            raise ValueError("Incorrect resolution. Try lower resolution\nFile", file_name)
 
         if self.count:
             self.counter()
@@ -214,7 +220,6 @@ class Compress:
                         self.skip += 1
                         orig_size, comp_size, status = is_incomplete(self.local_file, new_file)
                         if orig_size != comp_size:  # incomplete
-                            print('Replacing {} with new file'.format(self.local_file.replace(self.local, '')))
                             try:
                                 os.unlink(self.local_file)
                                 if self.count:

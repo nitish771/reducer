@@ -29,3 +29,9 @@ encrypt:bool|after compression it will compress entire compressed folder with sh
 shuffle:bool|shuffle compresssion|
 delete_dup:bool|remove duplicates after compression|
 hidden:bool|count hidden files too (e.g. - .git)|
+
+
+## ToDos
+
+1. Compression details(e.g. start time, taken time, end time)
+2. colorful details to distinguish files
