@@ -143,7 +143,8 @@ class Compress:
                 # check here if res in wrong
                 raise ValueError("Incorrect resolution. Try lower resolution\nFile", file_name)        
             else:
-                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB')
+                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB',
+                    os.path.basename(local_file))
                 os.unlink(local_file)
         
         ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
@@ -270,6 +271,10 @@ class Compress:
 
         print("Done")
 
+    @staticmethod
+    def calc_size(folder):
+        return str(utils.readable_size(utils.size(folder)))
+
     def __str__(self):
         return '''
         Parms  :-
@@ -297,9 +302,9 @@ def sort_func( name):
 
 
 if __name__ == '__main__':
-    from utils import encrypt, is_incomplete, convert
+    import utils
+    from utils import encrypt, is_incomplete, convert, get_size
     from removeDups import remove
-    Compress('/home/nk/Videos', '/home/nk/playground')
 else:
     from .utils import encrypt, is_incomplete, convert
     from .removeDups import remove

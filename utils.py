@@ -149,6 +149,17 @@ def get_size(file):
     return 0
 
 
+def size(folder):
+    folder_size = 0
+    if os.path.isfile(folder):
+        return get_size(folder)
+    else:
+        for file in os.listdir(folder):
+            new_content = folder + '/' + file
+            folder_size += size(new_content)
+    return folder_size
+
+
 def readable_size(size):
 
     readable = 0
