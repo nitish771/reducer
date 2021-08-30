@@ -190,10 +190,10 @@ def total_size(folder, total=0):
 
 ##########################
 
-def is_incomplete(comp_file, orig_file):
+def is_incomplete(comp_file, orig_file, factor=18):
     orig_size = os.stat(orig_file).st_size
     comp_size = os.stat(comp_file).st_size
-    return (orig_size, comp_size, comp_size < (orig_size//18))
+    return (orig_size, comp_size, comp_size < (orig_size//factor))
 
 
 def is_dup(file1, file2):
