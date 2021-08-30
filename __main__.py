@@ -130,7 +130,7 @@ class Compress:
         local_file = self.to_local(file)
         saveas = self.valid_unix_name(local_file)
         file_name = file.replace(self.remote, '')
-
+        status = False
 
         # if exists check for size
         if os.path.exists(local_file):
@@ -138,7 +138,7 @@ class Compress:
             orig_size, comp_size, status = is_incomplete(local_file, file)
 
             if not status:  # not incomplete
-                return 
+                pass
             elif comp_size > orig_size:
                 # check here if res in wrong
                 raise ValueError("Incorrect resolution. Try lower resolution\nFile",
@@ -148,7 +148,9 @@ class Compress:
                     self.local)
                 os.unlink(local_file)
         
-        ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
+        else:
+            # file not exists
+            ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
                 -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
                 -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
                 -y -r 20 " + saveas
@@ -156,15 +158,17 @@ class Compress:
         if self.count:
             self.counter()
 
-        print('compressing\t', self.shorten_name(self.shorten_name(file_name)))
-        
-        os.system(ffmpeg_cmd)
-
         # increase compresed files value
         with self.value.get_lock():
             self.value.value += 1
-        
-        print('Compressed\t', self.shorten_name(file_name.split('/')[-1]))
+
+        if status:
+            print('{:<15} {}'.format('Compressing', '||'), self.shorten_name(self.shorten_name(file_name)))
+            os.system(ffmpeg_cmd)
+            print('{:<15} {}'.format('Compressed', '->'), self.shorten_name(file_name.split('/')[-1]))
+        else:
+            print('{:<15} {}'.format('Skipping', '||'), self.shorten_name(self.shorten_name(file_name)))
+
         
     def convert(self, file, ext="mp3"):
         file_ext = file.split('.')[-1]
@@ -212,7 +216,7 @@ class Compress:
                         try:
                             if self.count:
                                 self.counter()
-                            print('copy || ', self.shorten_name(self.local_file.replace(self.local, '')))
+                            print('{:<15} {}'.format('Copy', '||'), self.shorten_name(self.local_file.replace(self.local, '')))
                             copy(new_file, self.local_file)
                         except Exception as e:
                             print(e)
@@ -225,14 +229,14 @@ class Compress:
                                 os.unlink(self.local_file)
                                 if self.count:
                                     self.counter()
-                                print('replace || ', self.shorten_name(self.local_file.replace(self.local, '')))
+                                print('{:<15} {}'.format('Replace', '||'), self.shorten_name(self.local_file.replace(self.local, '')))
                                 copy(new_file, self.local_file)
                             except Exception as e:
                                 print(e)
                         else:  # file is already copied and is complete
                             if self.count:
                                 self.counter()
-                        print('copied || ', self.shorten_name(self.local_file.replace(self.local, '')))
+                        print('{:<15} {}'.format('Copied', '||'), self.shorten_name(self.local_file.replace(self.local, '')))
                 else:  # new content in folder
                     self.get_file(new_file) 
 
