@@ -141,10 +141,11 @@ class Compress:
                 return 
             elif comp_size > orig_size:
                 # check here if res in wrong
-                raise ValueError("Incorrect resolution. Try lower resolution\nFile", file_name)        
+                raise ValueError("Incorrect resolution. Try lower resolution\nFile",
+                    file_name)        
             else:
-                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB',
-                    os.path.basename(local_file))
+                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB -> ',
+                    self.local)
                 os.unlink(local_file)
         
         ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
@@ -273,7 +274,8 @@ class Compress:
 
     @staticmethod
     def calc_size(folder):
-        return str(utils.readable_size(utils.size(folder)))
+        size = str(utils.readable_size(utils.size(folder)))
+        return size
 
     def __str__(self):
         return '''
@@ -306,5 +308,6 @@ if __name__ == '__main__':
     from utils import encrypt, is_incomplete, convert, get_size
     from removeDups import remove
 else:
+    from . import utils
     from .utils import encrypt, is_incomplete, convert
     from .removeDups import remove
