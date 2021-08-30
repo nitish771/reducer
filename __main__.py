@@ -145,9 +145,8 @@ class Compress:
                     file_name)        
             else:
                 print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB -> ',
-                    self.local)
-                os.unlink(local_file)
-        
+                    self.local_file)
+                os.unlink(local_file)      
         else:
             # file not exists
             ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
