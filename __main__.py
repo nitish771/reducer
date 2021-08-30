@@ -48,6 +48,7 @@ class Compress:
                 print(ext , ':', item_no)
             print()
         
+        print('Now compressing ', self.remote)
         self.main(kwargs)                    # start compressing
         
         if kwargs.get('delete_dup'):
@@ -131,6 +132,7 @@ class Compress:
         saveas = self.valid_unix_name(local_file)
         file_name = file.replace(self.remote, '')
         status = False
+        ffmpeg_cmd = ''
 
         # if exists check for size
         if os.path.exists(local_file):
@@ -145,7 +147,7 @@ class Compress:
                     file_name)        
             else:
                 print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB -> ',
-                    self.local_file)
+                    self.local_file.replace(self.local, ''))
                 os.unlink(local_file)      
         else:
             # file not exists
@@ -161,11 +163,14 @@ class Compress:
         with self.value.get_lock():
             self.value.value += 1
 
-        if status:
-            print('{:<15} {}'.format('Compressing', '||'), self.shorten_name(self.shorten_name(file_name)))
+        if not status:
+            # not incomplete or not exists
+            file_name = file_name.replace(self.local, '')
+            print('{:<15} {}'.format('Compressing', '||'), self.shorten_name(file_name))
             os.system(ffmpeg_cmd)
-            print('{:<15} {}'.format('Compressed', '->'), self.shorten_name(file_name.split('/')[-1]))
+            print('{:=>25}  {:>6}'.format('Compressed', '->'), self.shorten_name(file_name))
         else:
+            # exists and not incomplete 
             print('{:<15} {}'.format('Skipping', '||'), self.shorten_name(self.shorten_name(file_name)))
 
         
@@ -278,7 +283,7 @@ class Compress:
     @staticmethod
     def calc_size(folder):
         size = str(utils.readable_size(utils.size(folder)))
-        print(size)
+        print(os.path.basename(folder), 'size :', size)
         return size
 
     def __str__(self):
