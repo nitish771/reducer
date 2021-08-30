@@ -173,20 +173,20 @@ class Compress:
     def convert(self, file, ext="mp3"):
         file_ext = file.split('.')[-1]
         saveas = (file.replace(file_ext, ext)).replace(self.remote, self.local)
-        # print(saveas)
         local_name = self.to_local(file)
         file_name = file.replace(self.remote, '')
+        status = False
 
         # if exists check for size
         if os.path.exists(file_name):
-            orig_size, comp_size, status = is_incomplete(file_name, file)
+            orig_size, comp_size, status = is_incomplete(file_name, file, 8)
             if not status:  # not incomplete
-                return 
+                pass 
             else:
-                print(file_name)
-                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB')
-                os.unlink(local_name)
-        
+                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB -> ',
+                    self.local)
+                os.unlink(local_file)
+
         if self.count:
             self.counter()
         
@@ -279,6 +279,7 @@ class Compress:
     @staticmethod
     def calc_size(folder):
         size = str(utils.readable_size(utils.size(folder)))
+        print(size)
         return size
 
     def __str__(self):
