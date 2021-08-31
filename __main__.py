@@ -205,10 +205,10 @@ class Compress:
         if should_compress:
             # incomplete or not exists
             file_name = file_name.replace(self.local, '')
-            print('{:<15}  ||'.format('COMPRESSING'), self.shorten_name(file_name))
+            print('{:<15} ||'.format('COMPRESSING'), self.shorten_name(file_name))
             os.system(ffmpeg_cmd)
             end_time = timestamp()
-            print(self._time_taken(start_time, end_time), '   ||',
+            print('{:<40} {}'.format(self._time_taken(start_time, end_time), '||'),
                 self.shorten_name(file_name))
         else:
             # exists and not incomplete 
