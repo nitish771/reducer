@@ -166,35 +166,30 @@ def readable_size(size):
     readable = 0
     unit = 'B'
     
-    if size>1024:
+    if size>=pow(1024,3):
+        size /= pow(1024,3)
+        unit = "GB"
+    elif size>=pow(1024,2):
+        size /= pow(1024, 2)
+        unit = "MB"
+    elif size>1024:
         size /= 1024
-        unit = " KB"
-    if size>1024:
-        size /= 1024
-        unit = " MB"
-    if size>1024:
-        size /= 1024
-        unit = " GB"
+        unit = "KB"
+    else:
+        unit = 'B'
     return '{:.2f} {}'.format(size, unit)
 
 
 def read_seconds(sec):
-    hour = 0
     minute = 0
     sec = int(sec)
     if sec < 60:
         pass
-    elif sec < 3600:
+    else:
         minute = sec // 60
         rem_time = sec - minute*60
-        sec = rem_time
-    else:
-        hour = sec // 3600
-        rem_time = sec - hour*3600
-        minute = rem_time // 60
-        rem_time -= minute*60
-        sec = rem_time
-    return '{:0>2}:{:0>2}:{:0>2}'.format(hour, minute, sec)
+        sec = rem_time if rem_seconds<60 else -1
+    return '{:0>2}:{:0>2}'.format(minute, sec)
 
 
 def total_size(folder, total=0):

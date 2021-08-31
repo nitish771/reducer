@@ -205,11 +205,20 @@ class Compress:
         if should_compress:
             # incomplete or not exists
             file_name = file_name.replace(self.local, '')
+
+            def abs_size(size):
+                '''will change 111.3MB to  111M'''
+                size = utils.readable_size(size).split(' ')
+                sz = str(int(float(size[0]))) + size[1][0]
+                return sz
+
             print('{:<15} ||'.format('COMPRESSING'), self.shorten_name(file_name))
             os.system(ffmpeg_cmd)
+            orig_size, comp_size, _ = is_incomplete(local_file, file)
             end_time = timestamp()
-            print('{:<40} {}'.format(self._time_taken(start_time, end_time), '||'),
-                self.shorten_name(file_name))
+            print('{:<26} | {:<5}/{:<4}  {} {}'.format(self._time_taken(start_time, end_time),
+                abs_size(orig_size), abs_size(comp_size),
+                '||', self.shorten_name(file_name)))
         else:
             # exists and not incomplete 
             print('{:<15} ||'.format('SKIPPING'), self.shorten_name(self.shorten_name(file_name)))
