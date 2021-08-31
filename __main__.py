@@ -44,20 +44,23 @@ class Compress:
             if os.path.exists(self.local):
                 sys.exit('Exiting - folder exists')
 
-        print('\nNow compressing ', self.remote, '\n\n')
+        print('\n{:=^100}\n'.format(os.path.basename(self.remote).upper()))
+        print('\nSize (Before compression): ', Compress.calc_size(self.remote), '\n\n')
 
         if kwargs.get('count', 1):
             self.count = self.count_files(self.remote,
                 hidden=kwargs.get('hidden'))
-            print('total files in folder : ', self.count, '\n')
+            print('Total files : ', self.count, '\n')
+            print('|  Ext  | Count |')
+            print('|_______|_______|')
             for ext, item_no in self.files_by_ext.items():
-                print(ext , ':', item_no)
-            print()
+                print('| {:<5} | {:>5} |'.format(ext , item_no))
+            print('|_______|_______|', '\n\n')
         
         self.compress_st_time = timestamp()
         self.main(kwargs)                    # start compressing
-        print('{:=^50}'.format('COMPRESSION COMPLETE'))
-        print(self._time_taken(self.compress_st_time, timestamp()))
+        print('\n\nTotal Time taken', self._time_taken(self.compress_st_time, timestamp()), end='')
+        print('\n{:=^100}\n'.format(os.path.basename(self.remote).upper()))
         
         if kwargs.get('delete_dup'):
             remove(self.local)
@@ -155,7 +158,7 @@ class Compress:
         dt1 = dt1.astimezone(timezone('Asia/Kolkata'))  # Datetime in IST
         dt1 = dt1.strftime('%H:%M')  # format time
 
-        dt2 = datetime.utcfromtimestamp(start_time)  # datetime, no timezone
+        dt2 = datetime.utcfromtimestamp(end_time)  # datetime, no timezone
         dt2 = dt2.replace(tzinfo=timezone('UTC'))  # datetime object with utc timezone
         dt2 = dt2.astimezone(timezone('Asia/Kolkata'))  # Datetime in IST
         dt2 = dt2.strftime('%H:%M')  # format time
@@ -186,8 +189,8 @@ class Compress:
                 raise ValueError("Incorrect resolution. Try lower resolution\nFile",
                     file_name)        
             else:
-                print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB -> ',
-                    self.local_file.replace(self.local, ''))
+                print('AC/CS {:>4}MB/{:<6}   ||'.format(orig_size//1024**2, str(comp_size//1024**2)
+                    +'MB'), self.local_file.replace(self.local, ''))
                 os.unlink(local_file)      
 
         ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
@@ -333,7 +336,6 @@ class Compress:
     @staticmethod
     def calc_size(folder):
         size = str(utils.readable_size(utils.size(folder)))
-        print(os.path.basename(folder), 'size :', size)
         return size
 
 
@@ -369,6 +371,7 @@ if __name__ == '__main__':
     import utils
     from utils import encrypt, is_incomplete, convert, get_size
     from removeDups import remove
+
 else:
     from . import utils
     from .utils import encrypt, is_incomplete, convert
