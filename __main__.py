@@ -105,8 +105,9 @@ class Compress:
 
 
     def counter(self):
-        print('T', self.count, '-C', self.value.value, '-S', self.skip,
-            '-R', (self.count-self.value.value-self.skip), ' || ', end='', sep='')
+        out = 'T' + str(self.count) + '-C' + str(self.value.value) + '-S' \
+            + str(self.skip) + '-R' + str(self.count-self.value.value-self.skip)
+        print('{:<21} || '.format(out), end='')
 
 
     def make_dirs(self, folder):
@@ -170,15 +171,15 @@ class Compress:
         saveas = self.valid_unix_name(local_file)
         file_name = file.replace(self.remote, '')
         start_time = timestamp()
-        status = False
+        should_compress = True
         ffmpeg_cmd = ''
 
         # if exists check for size
         if os.path.exists(local_file):
             # checking here if incomplete recompress
-            orig_size, comp_size, status = is_incomplete(local_file, file)
+            orig_size, comp_size, should_compress = is_incomplete(local_file, file)
 
-            if not status:  # not incomplete
+            if not should_compress:  # not incomplete
                 pass
             elif comp_size > orig_size:
                 # check here if res in wrong
@@ -188,12 +189,11 @@ class Compress:
                 print(f'AC/CS {orig_size//1024**2}MB/{comp_size//1024**2}MB -> ',
                     self.local_file.replace(self.local, ''))
                 os.unlink(local_file)      
-        else:
-            # file not exists
-            ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
-                -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
-                -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
-                -y -r 20 " + saveas
+
+        ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
+            -b:a 64k -ac 1 -vf scale=\"'w=-2:h=trunc(min(ih," + str(self.res) + ")/2)*2'\" \
+            -crf 32 -profile:v baseline -level 3.0 -preset slow -v error -strict -2 -stats \
+            -y -r 20 " + saveas
 
         if self.count:
             self.counter()
@@ -202,17 +202,17 @@ class Compress:
         with self.value.get_lock():
             self.value.value += 1
 
-        if not status:
-            # not incomplete or not exists
+        if should_compress:
+            # incomplete or not exists
             file_name = file_name.replace(self.local, '')
-            print('{:<15} {}'.format('COMPRESSING', '||'), self.shorten_name(file_name))
+            print('{:<15}  ||'.format('COMPRESSING'), self.shorten_name(file_name))
             os.system(ffmpeg_cmd)
             end_time = timestamp()
-            print(self._time_taken(start_time, end_time), ' ||',
+            print(self._time_taken(start_time, end_time), '   ||',
                 self.shorten_name(file_name))
         else:
             # exists and not incomplete 
-            print('{:<15} {}'.format('SKIPPING', '||'), self.shorten_name(self.shorten_name(file_name)))
+            print('{:<15} ||'.format('SKIPPING'), self.shorten_name(self.shorten_name(file_name)))
 
 
     def convert(self, file, ext="mp3"):
@@ -265,7 +265,7 @@ class Compress:
                         try:
                             if self.count:
                                 self.counter()
-                            print('{:<15} {}'.format('Copy', '||'), self.shorten_name(self.local_file.replace(self.local, '')))
+                            print('{:<15}  ||'.format('Copy'), self.shorten_name(self.local_file.replace(self.local, '')))
                             copy(new_file, self.local_file)
                         except Exception as e:
                             print(e)
@@ -278,14 +278,14 @@ class Compress:
                                 os.unlink(self.local_file)
                                 if self.count:
                                     self.counter()
-                                print('{:<15} {}'.format('Replace', '||'), self.shorten_name(self.local_file.replace(self.local, '')))
+                                print('{:<15}  ||'.format('Replace'), self.shorten_name(self.local_file.replace(self.local, '')))
                                 copy(new_file, self.local_file)
                             except Exception as e:
                                 print(e)
                         else:  # file is already copied and is complete
                             if self.count:
                                 self.counter()
-                        print('{:<15} {}'.format('Copied', '||'), self.shorten_name(self.local_file.replace(self.local, '')))
+                        print('{:<15} ||'.format('Copied'), self.shorten_name(self.local_file.replace(self.local, '')))
                 else:  # new content in folder
                     self.get_file(new_file) 
 
