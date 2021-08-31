@@ -3,9 +3,13 @@ import sys
 from multiprocessing import Process, Value
 from random import shuffle
 from shutil import copy
+from time import time as timestamp
+from datetime import datetime
+from pytz import timezone
 
 
 class Compress:
+
 
     def __init__(self, remote=None, local=None, **kwargs):
         self.kwargs = kwargs
@@ -40,6 +44,8 @@ class Compress:
             if os.path.exists(self.local):
                 sys.exit('Exiting - folder exists')
 
+        print('\nNow compressing ', self.remote, '\n\n')
+
         if kwargs.get('count', 1):
             self.count = self.count_files(self.remote,
                 hidden=kwargs.get('hidden'))
@@ -48,8 +54,10 @@ class Compress:
                 print(ext , ':', item_no)
             print()
         
-        print('Now compressing ', self.remote)
+        self.compress_st_time = timestamp()
         self.main(kwargs)                    # start compressing
+        print('{:=^50}'.format('COMPRESSION COMPLETE'))
+        print(self._time_taken(self.compress_st_time, timestamp()))
         
         if kwargs.get('delete_dup'):
             remove(self.local)
@@ -57,19 +65,24 @@ class Compress:
         if kwargs.get('encrypt_'):
             encrypt(self.local)
 
+
     def add_not_down(self, xt):
         '''Files whose extension is xt will be ignored (not copied or
         compressed)'''
         self.not_down.append(xt)
 
+
     def _top_dir(self, folder):
         return folder.split('/')[-1]
+
 
     def valid_unix_name(self, name):
         return '"'+name+'"'
 
+
     def to_local(self, content):
         return content.replace(self.remote, self.local)
+
 
     def count_files(self, folder, **kwargs):
         total=0
@@ -90,9 +103,11 @@ class Compress:
                 total += self.count_files(folder+'/'+file)
         return total
 
+
     def counter(self):
         print('T', self.count, '-C', self.value.value, '-S', self.skip,
             '-R', (self.count-self.value.value-self.skip), ' || ', end='', sep='')
+
 
     def make_dirs(self, folder):
         # Making Directory Copy
@@ -108,9 +123,11 @@ class Compress:
             os.system('mkdir -p ' +
               self.valid_unix_name(self.to_local(folder)))
 
+
     def should(self, file_name):
         s = os.path.exists(file_name)
         return not s
+
 
     def shorten_name(self, name):
         short = lambda x : x[:3]
@@ -127,10 +144,32 @@ class Compress:
         shorten += name.split('/')[-1]
         return shorten
 
+
+    def _time_taken(self, start_time:float, end_time:float):
+        '''Takes start time(timestamp) and end time(timestamp) and return time
+        related info'''
+
+        dt1 = datetime.utcfromtimestamp(start_time)  # datetime, no timezone
+        dt1 = dt1.replace(tzinfo=timezone('UTC'))  # datetime object with utc timezone
+        dt1 = dt1.astimezone(timezone('Asia/Kolkata'))  # Datetime in IST
+        dt1 = dt1.strftime('%H:%M')  # format time
+
+        dt2 = datetime.utcfromtimestamp(start_time)  # datetime, no timezone
+        dt2 = dt2.replace(tzinfo=timezone('UTC'))  # datetime object with utc timezone
+        dt2 = dt2.astimezone(timezone('Asia/Kolkata'))  # Datetime in IST
+        dt2 = dt2.strftime('%H:%M')  # format time
+
+        # ST - start time, ET- end time, TT = time taken
+        elap_time = 'ST-{}|ET-{}|TT-{}'.format(
+            dt1, dt2, utils.read_seconds(end_time - start_time))
+        return elap_time
+
+
     def compress(self, file, *args):
         local_file = self.to_local(file)
         saveas = self.valid_unix_name(local_file)
         file_name = file.replace(self.remote, '')
+        start_time = timestamp()
         status = False
         ffmpeg_cmd = ''
 
@@ -166,20 +205,23 @@ class Compress:
         if not status:
             # not incomplete or not exists
             file_name = file_name.replace(self.local, '')
-            print('{:<15} {}'.format('Compressing', '||'), self.shorten_name(file_name))
+            print('{:<15} {}'.format('COMPRESSING', '||'), self.shorten_name(file_name))
             os.system(ffmpeg_cmd)
-            print('{:=>25}  {:>6}'.format('Compressed', '->'), self.shorten_name(file_name))
+            end_time = timestamp()
+            print(self._time_taken(start_time, end_time), ' ||',
+                self.shorten_name(file_name))
         else:
             # exists and not incomplete 
-            print('{:<15} {}'.format('Skipping', '||'), self.shorten_name(self.shorten_name(file_name)))
+            print('{:<15} {}'.format('SKIPPING', '||'), self.shorten_name(self.shorten_name(file_name)))
 
-        
+
     def convert(self, file, ext="mp3"):
         file_ext = file.split('.')[-1]
         saveas = (file.replace(file_ext, ext)).replace(self.remote, self.local)
         local_name = self.to_local(file)
         file_name = file.replace(self.remote, '')
         status = False
+        start_time = timestamp()
 
         # if exists check for size
         if os.path.exists(file_name):
@@ -196,12 +238,15 @@ class Compress:
         
         # print('converting', self.shorten_name(file))
         convert(file_name=file, saveas=saveas, to=ext)
+        end_time = timestamp()
 
         # increase compresed files value
         with self.value.get_lock():
             self.value.value += 1
 
-        # print('Converted\t', self.shorten_name(file_name.split('/')[-1]))
+        print(self._time_taken(start_time, end_time), 'Converted\t', file_name.replace(
+            self.remote, ''))
+
 
     def get_file(self, folder):
         os.chdir(folder)
@@ -244,11 +289,8 @@ class Compress:
                 else:  # new content in folder
                     self.get_file(new_file) 
 
+
     def main(self, kwargs):
-        if self.count:
-            print('Total files', self.count)
-
-
         ## Get all files recursively
         self.make_dirs(self.remote)    # make copies
         self.get_file(self.remote)     # list all files
@@ -278,7 +320,6 @@ class Compress:
             p3.start()
             p3.join()
 
-        print("Done")
 
     @staticmethod
     def calc_size(folder):
@@ -286,19 +327,22 @@ class Compress:
         print(os.path.basename(folder), 'size :', size)
         return size
 
+
     def __str__(self):
         return '''
         Parms  :-
             remote :- From Where | Gdrive url
             local  :- To Where | gdrive url
-        '''
+            '''
+
 
     def __repr__(self):
-        return '''
-        Parms  :-
-            remote :- From Where | Gdrive url
-            local  :- To Where | gdrive url
-        '''
+        stngs = f'''
+        Remote = {self.remote}
+        Local = {self.local}'''
+        for key, val in self.kwargs.items():
+            stngs += f'\n\t{key} = {val}'
+        return stngs
 
 
 def sort_func( name):

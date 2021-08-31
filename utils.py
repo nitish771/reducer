@@ -109,23 +109,24 @@ def compress(folder, format='zip', name=None, loc=None, delete=False):
 
 
 def convert(file_name, saveas=None,  to="mp3"):
-    file_ext = file_name.split('.')[-1]
-    if not saveas:
-        saveas = os.path.dirname(file_name) + '/' + file_name.split('/')[-1].replace(file_ext, to)
+    try:
+        file_ext = file_name.split('.')[-1]
+        if not saveas:
+            saveas = os.path.dirname(file_name) + '/' + file_name.split('/')[-1].replace(file_ext, to)
 
-    # if exists quit
-    if os.path.exists(saveas):
-        print('Skipping', file_name)
-        return
+        # if exists quit
+        if os.path.exists(saveas):
+            print('Skipping', file_name)
+            return
 
-    print(file_name, saveas, end='\n')
-    print(os.system('ls -lh ' + posix_name(file_name)))
-    ffmpeg_cmd = "ffmpeg -i " + posix_name(file_name) + "\
-            -map 0:a:0 -b:a 26k -y " + posix_name(saveas) + \
-            '>  /dev/null'
-    print('Converting\t', file_name)
-    os.system(ffmpeg_cmd)
-    print('Compressed\t', file_name.split('/')[-1])
+        print(file_name, saveas, end='\n')
+        ffmpeg_cmd = "ffmpeg -i " + posix_name(file_name) + "\
+                -map 0:a:0? -b:a 26k -y " + posix_name(saveas) + \
+                '>  /dev/null'
+        print('Converting\t', file_name)
+        os.system(ffmpeg_cmd)
+    except Exception as e:
+        print(e)
 
 
 def extract(file, loc=None):
@@ -175,6 +176,25 @@ def readable_size(size):
         size /= 1024
         unit = " GB"
     return '{:.2f} {}'.format(size, unit)
+
+
+def read_seconds(sec):
+    hour = 0
+    minute = 0
+    sec = int(sec)
+    if sec < 60:
+        pass
+    elif sec < 3600:
+        minute = sec // 60
+        rem_time = sec - minute*60
+        sec = rem_time
+    else:
+        hour = sec // 3600
+        rem_time = sec - hour*3600
+        minute = rem_time // 60
+        rem_time -= minute*60
+        sec = rem_time
+    return '{:0>2}:{:0>2}:{:0>2}'.format(hour, minute, sec)
 
 
 def total_size(folder, total=0):
