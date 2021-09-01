@@ -59,8 +59,9 @@ class Compress:
         
         self.compress_st_time = timestamp()
         self.main(kwargs)                    # start compressing
-        print('\n\nTotal Time taken', self._time_taken(self.compress_st_time, timestamp()), end='')
-        print('\n{:=^100}\n'.format(os.path.basename(self.remote).upper()))
+        print('\nTime', self._time_taken(self.compress_st_time, timestamp()), end='')
+        print('\nSize (After compression): ', Compress.calc_size(self.local), '\n\n')
+        print('\n{:-^100}\n'.format(os.path.basename(self.remote).upper()))
         
         if kwargs.get('delete_dup'):
             remove(self.local)
@@ -172,25 +173,31 @@ class Compress:
     def compress(self, file, *args):
         local_file = self.to_local(file)
         saveas = self.valid_unix_name(local_file)
-        file_name = file.replace(self.remote, '')
+        file_name = file.replace(self.remote, '')  # includes subdirs/file
         start_time = timestamp()
         should_compress = True
         ffmpeg_cmd = ''
+
+        def abs_size(size, full_unit=False):
+            '''will change 111.3MB to  111M'''
+            size = utils.readable_size(size).split(' ')
+            if full_unit:
+                return str(int(float(size[0]))) + size[1]
+            return str(int(float(size[0]))) + size[1][0]
 
         # if exists check for size
         if os.path.exists(local_file):
             # checking here if incomplete recompress
             orig_size, comp_size, should_compress = is_incomplete(local_file, file)
-
-            if not should_compress:  # not incomplete
-                pass
-            elif comp_size > orig_size:
+            if comp_size > orig_size:
                 # check here if res in wrong
-                raise ValueError("Incorrect resolution. Try lower resolution\nFile",
-                    file_name)        
+                self.res = '360'
+                should_compress = True
+            elif not should_compress:  # not incomplete
+                pass
             else:
-                print('AC/CS {:>4}MB/{:<6}   ||'.format(orig_size//1024**2, str(comp_size//1024**2)
-                    +'MB'), self.local_file.replace(self.local, ''))
+                print('AC/CS {:>6}/{:<7}  ||{:>19} {}'.format(abs_size(orig_size, 1).strip(),
+                    abs_size(comp_size, 1).strip(), '||', file_name))
                 os.unlink(local_file)      
 
         ffmpeg_cmd = "ffmpeg -i " + self.valid_unix_name(file) + "\
@@ -207,14 +214,6 @@ class Compress:
 
         if should_compress:
             # incomplete or not exists
-            file_name = file_name.replace(self.local, '')
-
-            def abs_size(size):
-                '''will change 111.3MB to  111M'''
-                size = utils.readable_size(size).split(' ')
-                sz = str(int(float(size[0]))) + size[1][0]
-                return sz
-
             print('{:<15} ||'.format('COMPRESSING'), self.shorten_name(file_name))
             os.system(ffmpeg_cmd)
             orig_size, comp_size, _ = is_incomplete(local_file, file)
@@ -224,7 +223,8 @@ class Compress:
                 '||', self.shorten_name(file_name)))
         else:
             # exists and not incomplete 
-            print('{:<15} ||'.format('SKIPPING'), self.shorten_name(self.shorten_name(file_name)))
+            print('{:<6}{:>4}/{:<4} ||'.format('SKIP', abs_size(orig_size), abs_size(comp_size)
+             ), self.shorten_name(self.shorten_name(file_name)))
 
 
     def convert(self, file, ext="mp3"):
@@ -371,7 +371,6 @@ if __name__ == '__main__':
     import utils
     from utils import encrypt, is_incomplete, convert, get_size
     from removeDups import remove
-
 else:
     from . import utils
     from .utils import encrypt, is_incomplete, convert
