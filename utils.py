@@ -73,17 +73,31 @@ def rename(file_name, *args):
         print('error in renaming', e)
 
 
-def rename_files(folder=None, *user_ids):
+def rename_files(folder=None, **user_ids):
     if not folder :# or folder == '..':
         folder = os.getcwd()
+
     for file_ in os.listdir(folder):
-        if '.com' in file_ or '@' in file_:
-            new_content = os.path.join(folder, file_)
-            if os.path.isfile(new_content):
-                rename(new_content, *user_ids)
-            else:
-                rename_files(new_content, *user_ids)
-            rename(folder, *user_ids) # when comes out from deepest folder change name
+        new_content = os.path.join(folder, file_)
+        if os.path.isfile(new_content):
+            for  item in user_ids.values():
+                if item in file_:
+                    new_name = new_content.replace(item, '')
+                    try:
+                        os.system('mv "' + new_content + '"' + ' "' + new_name + '"')
+                    except Exception as e:
+                        print(e)
+        else:
+            rename_files(new_content, **user_ids)
+
+    for item in user_ids.values():
+        if item in folder.split('/')[-1]:
+            new_name = folder.replace(item, '')
+            try:
+                os.system('mv "' + folder + '"' + ' "' + new_name + '"')
+                return
+            except Exception as e:
+                print(e)
 
 #####################
 
@@ -188,7 +202,7 @@ def read_seconds(sec):
     else:
         minute = sec // 60
         rem_time = sec - minute*60
-        sec = rem_time if rem_seconds<60 else -1
+        sec = rem_time if rem_time<60 else -1
     return '{:0>2}:{:0>2}'.format(minute, sec)
 
 
@@ -291,8 +305,7 @@ def encrypt(folder, val=1, start=True):
     files = []
 
     if os.path.isfile(folder):
-        decrypt_name(folder, val)
-        return
+        return rename(folder, encrypted_name(folder, val))
 
     for content in os.listdir(folder):
         file_ = folder + '/' + content
@@ -375,8 +388,8 @@ def decrypt_list(folder, val=1, start=True, level=1, **kwargs):
 def decrypt(folder, val=1, start=True):
     files = []
     if os.path.isfile(folder):
-        decrypt_name(folder, val)
-        return
+        return rename(folder, decrypt_name(folder, val))
+
     for content in os.listdir(folder):
         if content.startswith('.'):
             continue
