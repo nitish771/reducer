@@ -186,7 +186,7 @@ def readable_size(size):
     elif size>=pow(1024,2):
         size /= pow(1024, 2)
         unit = "MB"
-    elif size>1024:
+    elif size>=1024:
         size /= 1024
         unit = "KB"
     else:
@@ -226,9 +226,12 @@ def is_incomplete(comp_file, orig_file, factor=18):
 
 
 def is_dup(file1, file2):
+    ''' 
+    Two files will be equal if their size is equal and one file's name contains another's name
+    '''
+
     file1_sz = os.path.getsize(file1)
     file2_sz = os.path.getsize(file2)
-
 
     copy_file1 = file1
     copy_file2 = file2
@@ -237,7 +240,10 @@ def is_dup(file1, file2):
     file1 = ".".join(file1.split('/')[-1].split('.')[:-1])
     file2 = ".".join(file2.split('/')[-1].split('.')[:-1])
 
-    criteria1 = (file1_sz == file2_sz) # equal size
+    criteria1 = False
+    # 4096 is size of folder
+    if file1_sz != 4096 and (file1_sz == file2_sz): # equal size
+        criteria1 = True
     criteria2 = (file1 in file2)
     criteria3 = (file2 in file1)
     # print(file1, file2, criteria1, criteria2, criteria3)
@@ -246,10 +252,7 @@ def is_dup(file1, file2):
         return copy_file2 # file2 is copy
     elif criteria1 and criteria3: # len of file1 > file2
         return copy_file1 # file1 is copy
-    elif criteria2 and file2_sz > file1_sz:
-        return copy_file1  # file1 is incomplete copy
-    elif criteria3 and file2_sz < file1_sz:
-        return copy_file2  # file1 is incomplete copy
+    return False
 
 
 def delete_dups(folder, sema=0):

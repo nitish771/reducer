@@ -45,7 +45,8 @@ class Compress:
                 sys.exit('Exiting - folder exists')
 
         print('\n{:=^100}\n'.format(os.path.basename(self.remote).upper()))
-        print('\nSize (Before compression): ', Compress.calc_size(self.remote), '\n\n')
+        before_size, before_size_bytes  = Compress.calc_size(self.remote)
+        print('\nSize (Before compression): ', before_size, '\n\n')
 
         if kwargs.get('count', 1):
             self.count = self.count_files(self.remote,
@@ -60,7 +61,12 @@ class Compress:
         self.compress_st_time = timestamp()
         self.main(kwargs)                    # start compressing
         print('\nTime', self._time_taken(self.compress_st_time, timestamp()), end='')
-        print('\nSize (After compression): ', Compress.calc_size(self.local), '\n\n')
+
+        after_size, after_size_bytes = Compress.calc_size(self.local)
+        reduction = ((before_size_bytes - after_size_bytes)/before_size_bytes)*100
+        print(before_size_bytes, after_size_bytes, reduction)
+        print('\nSize - Before {} / After {} ({:}%): '.format(before_size, after_size, int(reduction)), '\n\n')
+
         print('\n{:-^100}\n'.format(os.path.basename(self.remote).upper()))
         
         if kwargs.get('delete_dup'):
@@ -335,8 +341,9 @@ class Compress:
 
     @staticmethod
     def calc_size(folder):
-        size = str(utils.readable_size(utils.size(folder)))
-        return size
+        folder_size = utils.size(folder)
+        size = str(utils.readable_size(folder_size))
+        return (size, folder_size)
 
 
     def __str__(self):
