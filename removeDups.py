@@ -3,7 +3,7 @@ from itertools import permutations
 import shutil
 import re
 import string
-import utils as u
+from . import utils as u
 # from pdb import set_trace
 
 
@@ -34,7 +34,7 @@ def regexify(name):
 
 def isDup(f1, f2):
     # filename without extension
-    copy = u.is_dup(f1, f2):
+    copy = u.is_dup(f1, f2)
     if copy:
         key = f2 if f1 == copy else f1
         print(key)
