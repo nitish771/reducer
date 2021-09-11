@@ -2,6 +2,8 @@ import os
 from itertools import permutations
 import shutil
 import re
+import string
+import utils as u
 # from pdb import set_trace
 
 
@@ -19,26 +21,24 @@ def getFiles(fold):
 
 
 def regexify(name):
+    regex_special_chars = '.!$^*()[]|+}\\{'
     new_name = ''
     for char in name:
-        if char == '(':
-            new_name += '\('
-        elif char == ')':
-            new_name += '\)'
+        if char in regex_special_chars:
+            new_name += '\\'+char
         else:
             new_name += char
+    print(new_name)
     return new_name
 
 
 def isDup(f1, f2):
-    f1_ext = f1.split('.')[-1]
-    f2_ext = f2.split('.')[-1]
-
-    if (f1_ext == f2_ext) or (len(f1.split('.')) == 1 and  len(f2.split('.')) == 1 ) :
-        key = regexify(min(f1, f2))
-        copy = f1 if key!=f1 else f2
-
-        re_ptrn = re.compile(rf'^({key}(\s\(\d\))+)$')
+    # filename without extension
+    copy = u.is_dup(f1, f2):
+    if copy:
+        key = f2 if f1 == copy else f1
+        print(key)
+        re_ptrn = re.compile(rf'^({key}(\s\([1-10]))+)$')
         try:
             if (re_ptrn.findall(copy)[0][0]):
                 return 1

@@ -101,27 +101,6 @@ def rename_files(folder=None, **user_ids):
 
 #####################
 
-def compress(folder, format='zip', name=None, loc=None, delete=False):
-    if name is None:
-        name = folder.split('/')[-1]
-
-    if loc:
-        os.chdir(loc)
-    if format == 'zip':
-        print('cretaing zip')
-        os.system('zip -r "{}".zip "{}"'.format(name, folder))
-
-    elif format == 'tar':
-        print('creating tar')
-        os.system('tar cvf "{}".tar "{}"'.format(name, folder))
-
-    elif format == 'rar':
-        print('creating rar', 'rar a "{}".rar "{}"/*'.format(name, folder))
-        os.system('rar a "{}".rar "{}"/*'.format(name, folder))
-    if delete:
-        os.system('rm -rf ' + posix_name(folder))
-
-
 def convert(file_name, saveas=None,  to="mp3"):
     try:
         file_ext = file_name.split('.')[-1]
@@ -217,6 +196,48 @@ def total_size(folder, total=0):
     return readable_size(size)
 
 
+def compress(folder, format_='zip', name=None, loc=None, delete=False, subfolders=False):
+    # if size is not given will compress entire folder
+    if not loc:
+        loc = "/".join(folder.split('/')[:-1])
+
+    if not subfolders:
+        cmd = ''
+        if name is None:
+            name = folder.split('/')[-1]
+
+        if format_ == 'zip':
+            cmd += f'zip -r "{loc}/{name}".zip "{folder}"'
+
+        elif format_ == 'tar':
+            cmd += f'tar cvf "{loc}/{name}".tar "{folder}"'
+
+        elif format_ == 'rar':
+            cmd += f'rar a "{loc}/{name}".rar "{folder}"/*'
+
+    else:
+        # if size is given 
+        files = []  # compress files in folder 
+        for fold in os.listdir(folder):
+            new_content = folder + '/' + fold
+            if os.path.isfile(new_content):
+                files.append(new_content)
+            else:
+                compress(new_content, loc=loc, format_=format_, delete=delete, name=name)
+        if files:
+            name = folder.split('/')[-1]
+            cmd = f'zip -r "{loc}//{name} files".zip '
+            for file in files:
+                cmd += f' "{file}" '
+
+    if not os.path.exists(loc+'/'+name+' files.'+format_):
+        print(cmd)
+        os.system(cmd)
+
+    if delete:
+        os.system('rm -rf ' + posix_name(folder))
+
+
 ##########################
 
 def is_incomplete(comp_file, orig_file, factor=18):
@@ -227,7 +248,7 @@ def is_incomplete(comp_file, orig_file, factor=18):
 
 def is_dup(file1, file2):
     ''' 
-    Two files will be equal if their size is equal and one file's name contains another's name
+    Checks if size of both file is same and one file's name contains another's name
     '''
 
     file1_sz = os.path.getsize(file1)
@@ -240,18 +261,17 @@ def is_dup(file1, file2):
     file1 = ".".join(file1.split('/')[-1].split('.')[:-1])
     file2 = ".".join(file2.split('/')[-1].split('.')[:-1])
 
-    criteria1 = False
-    # 4096 is size of folder
-    if file1_sz != 4096 and (file1_sz == file2_sz): # equal size
-        criteria1 = True
+    criteria1 = (file1_sz == file2_sz)
     criteria2 = (file1 in file2)
     criteria3 = (file2 in file1)
-    # print(file1, file2, criteria1, criteria2, criteria3)
 
-    if  criteria1 and criteria2:
-        return copy_file2 # file2 is copy
-    elif criteria1 and criteria3: # len of file1 > file2
-        return copy_file1 # file1 is copy
+    # print(file1, file2, criteria1, criteria2, criteria3)
+    # 4096 is size of folder
+    if file1_sz != 4096 and criteria1: # equal size
+        if criteria2:
+            return file2 # file2 is copy
+        elif criteria3: # len of file1 > file2
+            return file1 # file1 is copy
     return False
 
 
